@@ -44,10 +44,16 @@ export default defineConfig({
       use: { ...devices['Desktop Firefox'] },
     },
 
-    /* Mobile: emulates a Pixel 7 phone (screen size, touch, user agent) using Chromium. */
+    /* Mobile: emulated phones (screen size, touch, user agent). */
+    /* Android: Samsung Galaxy A55, runs on Chromium. */
     {
-      name: 'mobile-pixel7',
-      use: { ...devices['Pixel 7'] },
+      name: 'mobile-galaxy-a55',
+      use: { ...devices['Galaxy A55'] },
+    },
+    /* iOS: iPhone 13, runs on WebKit (Safari's engine). Needs `npx playwright install webkit`. */
+    {
+      name: 'mobile-iphone13',
+      use: { ...devices['iPhone 13'] },
     },
   ],
 

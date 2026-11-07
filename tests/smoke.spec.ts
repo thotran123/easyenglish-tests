@@ -5,6 +5,7 @@ test.describe('Smoke', () => {
   test('home page title contains "Easy English"', async ({ page }) => {
     // '/' is joined to baseURL from playwright.config.ts
     await page.goto('/');
+    
     await expect(page).toHaveTitle(/Easy English/);
   });
 
