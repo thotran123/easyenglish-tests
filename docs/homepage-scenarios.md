@@ -23,44 +23,284 @@ The rule applies however the guest gets there: sidebar, feature cards, shortcuts
 
 ## Table of contents
 
-- [1. Both states (run as Guest and as Logged-in)](#1-both-states-run-as-guest-and-as-logged-in)
-  - Page load (7)
-  - Sidebar navigation (20)
-  - Mobile menu (4)
-  - Header shortcuts (3)
-  - Hero quote (4)
-  - Feature cards (10)
-  - Feedback (2)
-  - Calendar (9)
-  - Stats carousel (17)
-  - Supporter section (4)
-  - Facebook community (5)
-  - FAQ (5)
-  - Footer (4)
-  - Public chat widget (2)
-  - Accessibility (2)
-- [2. Guest only](#2-guest-only)
-  - Authentication (3)
-  - Greeting (1)
-  - Daily goal (2)
-  - Shortcuts (1)
-  - Reviews (2)
-  - Calendar (1)
-  - Feature cards (1)
-  - Local progress (1)
-  - Sidebar navigation (1)
-  - Direct URL access (8)
-- [3. Logged-in only](#3-logged-in-only)
-  - Authentication (3)
-  - Header (6)
-  - Notifications (6)
-  - Account menu (9)
-  - Shortcuts (3)
-  - Daily goal (7)
-  - Feature cards (3)
-  - Calendar (4)
-  - Reviews (7)
-  - Sync (1)
+**[1. Both states (run as Guest and as Logged-in)](#1-both-states-run-as-guest-and-as-logged-in)**
+
+*Page load (7)*
+
+- [HP-B-001](#hp-b-001--homepage-returns-http-200) – Homepage returns HTTP 200
+- [HP-B-002](#hp-b-002--page-title-is-correct) – Page title is correct
+- [HP-B-003](#hp-b-003--no-console-errors-on-load) – No console errors on load
+- [HP-B-004](#hp-b-004--logo-links-to-homepage) – Logo links to homepage
+- [HP-B-005](#hp-b-005--favicon-and-manifest-load) – Favicon and manifest load
+- [HP-B-006](#hp-b-006--todays-date-shown-in-hero) – Today's date shown in hero
+- [HP-B-007](#hp-b-007--hero-heading-and-tagline) – Hero heading and tagline
+
+*Sidebar navigation (20)*
+
+- [HP-B-008](#hp-b-008--sidebar-link-trang-chủ-navigates-to-) – Sidebar link "Trang chủ" navigates to /
+- [HP-B-009](#hp-b-009--sidebar-link-từ-vựng-navigates-to-vocabulary) – Sidebar link "Từ vựng" navigates to /vocabulary
+- [HP-B-010](#hp-b-010--sidebar-link-collocations-navigates-to-collocations) – Sidebar link "Collocations" navigates to /collocations
+- [HP-B-011](#hp-b-011--sidebar-link-từ-điển-navigates-to-dictionary) – Sidebar link "Từ điển" navigates to /dictionary
+- [HP-B-012](#hp-b-012--sidebar-link-ngữ-pháp-navigates-to-grammars) – Sidebar link "Ngữ pháp" navigates to /grammars
+- [HP-B-013](#hp-b-013--sidebar-link-cấu-trúc-navigates-to-structures) – Sidebar link "Cấu trúc" navigates to /structures
+- [HP-B-014](#hp-b-014--sidebar-link-kỹ-năng-navigates-to-skills) – Sidebar link "Kỹ năng" navigates to /skills
+- [HP-B-015](#hp-b-015--sidebar-link-luyện-thi-navigates-to-tests) – Sidebar link "Luyện thi" navigates to /tests
+- [HP-B-016](#hp-b-016--sidebar-link-lớp-học-navigates-to-classrooms) – Sidebar link "Lớp học" navigates to /classrooms
+- [HP-B-017](#hp-b-017--sidebar-link-trò-chơi-navigates-to-games) – Sidebar link "Trò chơi" navigates to /games
+- [HP-B-018](#hp-b-018--sidebar-link-sổ-tay-navigates-to-diary) – Sidebar link "Sổ tay" navigates to /diary
+- [HP-B-019](#hp-b-019--sidebar-link-bảng-xếp-hạng-navigates-to-leaderboard) – Sidebar link "Bảng xếp hạng" navigates to /leaderboard
+- [HP-B-020](#hp-b-020--sidebar-link-supporter-navigates-to-supporter) – Sidebar link "Supporter" navigates to /supporter
+- [HP-B-021](#hp-b-021--sidebar-link-mời-bạn-bè-navigates-to-invite) – Sidebar link "Mời bạn bè" navigates to /invite
+- [HP-B-022](#hp-b-022--sidebar-link-cài-đặt-navigates-to-settings) – Sidebar link "Cài đặt" navigates to /settings
+- [HP-B-023](#hp-b-023--sidebar-groups-are-displayed) – Sidebar groups are displayed
+- [HP-B-024](#hp-b-024--trang-chủ-is-marked-active) – "Trang chủ" is marked active
+- [HP-B-025](#hp-b-025--từ-điển-shows-16k-badge) – Từ điển shows 16K+ badge
+- [HP-B-026](#hp-b-026--collapse-and-expand-sidebar-desktop-only) – Collapse and expand sidebar `Desktop only`
+- [HP-B-027](#hp-b-027--tin-nhắn-opens-messages) – "Tin nhắn" opens messages
+
+*Mobile menu (4)*
+
+- [HP-B-028](#hp-b-028--open-mobile-navigation-menu-mobile-projects) – Open mobile navigation menu `mobile projects`
+- [HP-B-029](#hp-b-029--close-mobile-navigation-menu-mobile-projects) – Close mobile navigation menu `mobile projects`
+- [HP-B-030](#hp-b-030--navigate-from-mobile-menu-mobile-projects) – Navigate from mobile menu `mobile projects`
+- [HP-B-031](#hp-b-031--no-horizontal-scroll-on-mobile-mobile-projects) – No horizontal scroll on mobile `mobile projects`
+
+*Header shortcuts (3)*
+
+- [HP-B-032](#hp-b-032--bảng-xếp-hạng-shortcut) – "Bảng xếp hạng" shortcut
+- [HP-B-033](#hp-b-033--tiến-độ-shortcut) – "Tiến độ" shortcut
+- [HP-B-034](#hp-b-034--greeting-matches-time-of-day-mock-the-clock-pageclock-for-each-time-band) – Greeting matches time of day `Mock the clock (page.clock) for each time band`
+
+*Hero quote (4)*
+
+- [HP-B-035](#hp-b-035--daily-quote-is-displayed) – Daily quote is displayed
+- [HP-B-036](#hp-b-036--change-to-next-quote) – Change to next quote
+- [HP-B-037](#hp-b-037--copy-quote-grant-clipboard-permissions-in-the-context) – Copy quote `Grant clipboard permissions in the context`
+- [HP-B-038](#hp-b-038--credits-ticker-is-displayed) – Credits ticker is displayed
+
+*Feature cards (10)*
+
+- [HP-B-039](#hp-b-039--feature-card-từ-vựng-opens-vocabulary) – Feature card "Từ vựng" opens /vocabulary
+- [HP-B-040](#hp-b-040--feature-card-collocations-opens-collocations) – Feature card "Collocations" opens /collocations
+- [HP-B-041](#hp-b-041--feature-card-từ-điển-opens-dictionary) – Feature card "Từ điển" opens /dictionary
+- [HP-B-042](#hp-b-042--feature-card-ngữ-pháp-opens-grammars) – Feature card "Ngữ pháp" opens /grammars
+- [HP-B-043](#hp-b-043--feature-card-cấu-trúc-opens-structures) – Feature card "Cấu trúc" opens /structures
+- [HP-B-044](#hp-b-044--feature-card-kỹ-năng-opens-skills) – Feature card "Kỹ năng" opens /skills
+- [HP-B-045](#hp-b-045--feature-card-luyện-thi-opens-tests) – Feature card "Luyện thi" opens /tests
+- [HP-B-046](#hp-b-046--feature-card-lớp-học-opens-classrooms) – Feature card "Lớp học" opens /classrooms
+- [HP-B-047](#hp-b-047--feature-card-trò-chơi-opens-games) – Feature card "Trò chơi" opens /games
+- [HP-B-048](#hp-b-048--all-9-feature-cards-are-displayed) – All 9 feature cards are displayed
+
+*Feedback (2)*
+
+- [HP-B-049](#hp-b-049--messenger-feedback-link) – Messenger feedback link
+- [HP-B-050](#hp-b-050--email-feedback-link) – Email feedback link
+
+*Calendar (9)*
+
+- [HP-B-051](#hp-b-051--calendar-shows-current-month) – Calendar shows current month
+- [HP-B-052](#hp-b-052--go-to-previous-month) – Go to previous month
+- [HP-B-053](#hp-b-053--go-to-next-month) – Go to next month
+- [HP-B-054](#hp-b-054--return-to-current-month) – Return to current month
+- [HP-B-055](#hp-b-055--today-is-highlighted) – Today is highlighted
+- [HP-B-056](#hp-b-056--weekday-header-order) – Weekday header order
+- [HP-B-057](#hp-b-057--lunar-dates-are-shown) – Lunar dates are shown
+- [HP-B-058](#hp-b-058--calendar-legend) – Calendar legend
+- [HP-B-059](#hp-b-059--days-in-month-count) – Days in month count
+
+*Stats carousel (17)*
+
+- [HP-B-060](#hp-b-060--stats-section-heading) – Stats section heading
+- [HP-B-061](#hp-b-061--stat-card-lượt-rèn-luyện-links-to-user) – Stat card "Lượt rèn luyện" links to /user
+- [HP-B-062](#hp-b-062--stat-card-học-viên-tham-gia-links-to-leaderboard) – Stat card "Học viên tham gia" links to /leaderboard
+- [HP-B-063](#hp-b-063--stat-card-lượt-học-từ-vựng-links-to-vocabulary) – Stat card "Lượt học từ vựng" links to /vocabulary
+- [HP-B-064](#hp-b-064--stat-card-từ-vựng-toeic--ets-links-to-vocabulary) – Stat card "Từ vựng TOEIC & ETS" links to /vocabulary
+- [HP-B-065](#hp-b-065--stat-card-từ-vựng-ielts-links-to-vocabulary) – Stat card "Từ vựng IELTS" links to /vocabulary
+- [HP-B-066](#hp-b-066--stat-card-trò-chơi-tương-tác-links-to-games) – Stat card "Trò chơi tương tác" links to /games
+- [HP-B-067](#hp-b-067--stat-card-đề-thi-thực-chiến-links-to-tests) – Stat card "Đề thi thực chiến" links to /tests
+- [HP-B-068](#hp-b-068--stat-card-từ-vựng-đa-cấp-độ-links-to-vocabulary) – Stat card "Từ vựng đa cấp độ" links to /vocabulary
+- [HP-B-069](#hp-b-069--stat-card-cấu-trúc-mẫu-câu-links-to-structures) – Stat card "Cấu trúc mẫu câu" links to /structures
+- [HP-B-070](#hp-b-070--stat-card-bài-luyện-nghe-audio-links-to-skills) – Stat card "Bài luyện nghe Audio" links to /skills
+- [HP-B-071](#hp-b-071--stat-card-cụm-từ-collocations-links-to-collocations) – Stat card "Cụm từ Collocations" links to /collocations
+- [HP-B-072](#hp-b-072--carousel-auto-rotates) – Carousel auto-rotates
+- [HP-B-073](#hp-b-073--pause-and-resume-auto-rotate) – Pause and resume auto-rotate
+- [HP-B-074](#hp-b-074--next-and-previous-slide) – Next and previous slide
+- [HP-B-075](#hp-b-075--dot-navigation) – Dot navigation
+- [HP-B-076](#hp-b-076--swipe-carousel-on-mobile-mobile-projects) – Swipe carousel on mobile `mobile projects`
+
+*Supporter section (4)*
+
+- [HP-B-077](#hp-b-077--supporter-section-content) – Supporter section content
+- [HP-B-078](#hp-b-078--supporter-count-matches-avatars) – Supporter count matches avatars
+- [HP-B-079](#hp-b-079--mời-team-một-ly-cà-phê-button) – "Mời team một ly cà phê" button
+- [HP-B-080](#hp-b-080--xem-bảng-vinh-danh-link) – "Xem bảng vinh danh" link
+
+*Facebook community (5)*
+
+- [HP-B-081](#hp-b-081--community-section-content) – Community section content
+- [HP-B-082](#hp-b-082--theo-dõi-fanpage-link) – "Theo dõi Fanpage" link
+- [HP-B-083](#hp-b-083--tham-gia-nhóm-link) – "Tham gia nhóm" link
+- [HP-B-084](#hp-b-084--copy-fanpage-link-grant-clipboard-permissions) – Copy Fanpage link `Grant clipboard permissions`
+- [HP-B-085](#hp-b-085--copy-group-link-grant-clipboard-permissions) – Copy Group link `Grant clipboard permissions`
+
+*FAQ (5)*
+
+- [HP-B-086](#hp-b-086--faq-section-shows-8-items) – FAQ section shows 8 items
+- [HP-B-087](#hp-b-087--first-faq-is-expanded-by-default) – First FAQ is expanded by default
+- [HP-B-088](#hp-b-088--expand-another-faq-item) – Expand another FAQ item
+- [HP-B-089](#hp-b-089--collapse-an-expanded-faq-item) – Collapse an expanded FAQ item
+- [HP-B-090](#hp-b-090--vào-ôn-tập-srs-link) – "Vào Ôn Tập SRS" link
+
+*Footer (4)*
+
+- [HP-B-091](#hp-b-091--footer-content) – Footer content
+- [HP-B-092](#hp-b-092--footer-privacy-link) – Footer Privacy link
+- [HP-B-093](#hp-b-093--footer-terms-link) – Footer Terms link
+- [HP-B-094](#hp-b-094--footer-facebook-links) – Footer Facebook links
+
+*Public chat widget (2)*
+
+- [HP-B-095](#hp-b-095--open-public-chat) – Open public chat
+- [HP-B-096](#hp-b-096--collapse-chat-bubble-to-edge) – Collapse chat bubble to edge
+
+*Accessibility (2)*
+
+- [HP-B-097](#hp-b-097--keyboard-navigation) – Keyboard navigation
+- [HP-B-098](#hp-b-098--icon-buttons-have-accessible-names) – Icon buttons have accessible names
+
+**[2. Guest only](#2-guest-only)**
+
+*Authentication (3)*
+
+- [HP-G-001](#hp-g-001--đăng-nhập-button-is-visible) – "Đăng nhập" button is visible
+- [HP-G-002](#hp-g-002--sign-in-starts-google-flow-assert-only-the-popupurl-never-automate-google-login) – Sign-in starts Google flow `Assert only the popup/URL, never automate Google login`
+- [HP-G-003](#hp-g-003--no-account-menu-or-notifications) – No account menu or notifications
+
+*Greeting (1)*
+
+- [HP-G-004](#hp-g-004--guest-greeting) – Guest greeting
+
+*Daily goal (2)*
+
+- [HP-G-005](#hp-g-005--guest-daily-goal-values) – Guest daily goal values
+- [HP-G-006](#hp-g-006--guest-check-in-button) – Guest check-in button
+
+*Shortcuts (1)*
+
+- [HP-G-007](#hp-g-007--guest-sổ-tay-shortcut) – Guest "Sổ tay" shortcut
+
+*Reviews (2)*
+
+- [HP-G-008](#hp-g-008--guest-reviews-section) – Guest reviews section
+- [HP-G-009](#hp-g-009--đăng-nhập-để-viết-prompts-sign-in) – "Đăng nhập để viết" prompts sign-in
+
+*Calendar (1)*
+
+- [HP-G-010](#hp-g-010--guest-calendar-has-no-studied-days) – Guest calendar has no studied days
+
+*Feature cards (1)*
+
+- [HP-G-011](#hp-g-011--no-review-badges-for-guest) – No review badges for guest
+
+*Local progress (1)*
+
+- [HP-G-012](#hp-g-012--guest-progress-kept-offline) – Guest progress kept offline
+
+*Sidebar navigation (1)*
+
+- [HP-G-013](#hp-g-013--sidebar-tiến-độ-asks-guest-to-sign-in-on-user) – Sidebar "Tiến độ" asks guest to sign in on /user
+
+*Direct URL access (8)*
+
+- [HP-G-014](#hp-g-014--direct-url-collocations-asks-guest-to-sign-in-known-bug-content-currently-shown) – Direct URL /collocations asks guest to sign in `known bug: content currently shown`
+- [HP-G-015](#hp-g-015--direct-url-dictionary-asks-guest-to-sign-in) – Direct URL /dictionary asks guest to sign in
+- [HP-G-016](#hp-g-016--direct-url-grammars-asks-guest-to-sign-in-known-bug-content-currently-shown) – Direct URL /grammars asks guest to sign in `known bug: content currently shown`
+- [HP-G-017](#hp-g-017--direct-url-structures-asks-guest-to-sign-in-known-bug-content-currently-shown) – Direct URL /structures asks guest to sign in `known bug: content currently shown`
+- [HP-G-018](#hp-g-018--direct-url-skills-asks-guest-to-sign-in-known-bug-content-currently-shown) – Direct URL /skills asks guest to sign in `known bug: content currently shown`
+- [HP-G-019](#hp-g-019--direct-url-tests-asks-guest-to-sign-in-known-bug-content-currently-shown) – Direct URL /tests asks guest to sign in `known bug: content currently shown`
+- [HP-G-020](#hp-g-020--direct-url-classrooms-asks-guest-to-sign-in-known-bug-content-currently-shown) – Direct URL /classrooms asks guest to sign in `known bug: content currently shown`
+- [HP-G-021](#hp-g-021--direct-url-user-asks-guest-to-sign-in) – Direct URL /user asks guest to sign in
+
+**[3. Logged-in only](#3-logged-in-only)**
+
+*Authentication (3)*
+
+- [HP-L-001](#hp-l-001--logged-in-state-on-load-verify-after-login) – Logged-in state on load `verify after login`
+- [HP-L-002](#hp-l-002--session-persists-after-reload-verify-after-login-use-playwright-storagestate) – Session persists after reload `verify after login` `Use Playwright storageState`
+- [HP-L-003](#hp-l-003--logout-verify-after-login-re-login-needed-afterwards-run-last) – Logout `verify after login` `Re-login needed afterwards` `run last`
+
+*Header (6)*
+
+- [HP-L-004](#hp-l-004--greeting-shows-users-name-verify-after-login) – Greeting shows user's name `verify after login`
+- [HP-L-005](#hp-l-005--rename-display-name-verify-after-login) – Rename display name `verify after login`
+- [HP-L-006](#hp-l-006--rename-validation-verify-after-login) – Rename validation `verify after login`
+- [HP-L-007](#hp-l-007--switch-to-công-việc-mode-verify-after-login) – Switch to "Công việc" mode `verify after login`
+- [HP-L-008](#hp-l-008--switch-back-to-học-tập-mode-verify-after-login) – Switch back to "Học tập" mode `verify after login`
+- [HP-L-009](#hp-l-009--xp--streak-chip-verify-after-login) – XP / streak chip `verify after login`
+
+*Notifications (6)*
+
+- [HP-L-010](#hp-l-010--open-notifications-panel-verify-after-login) – Open notifications panel `verify after login`
+- [HP-L-011](#hp-l-011--close-notifications-panel-verify-after-login) – Close notifications panel `verify after login`
+- [HP-L-012](#hp-l-012--scroll-notifications-verify-after-login) – Scroll notifications `verify after login`
+- [HP-L-013](#hp-l-013--claim-xp-from-notification-verify-after-login-changes-account-data-use-a-test-account) – Claim XP from notification `verify after login` `Changes account data` `use a test account`
+- [HP-L-014](#hp-l-014--open-certificate-from-notification-verify-after-login) – Open certificate from notification `verify after login`
+- [HP-L-015](#hp-l-015--unread-indicator-verify-after-login) – Unread indicator `verify after login`
+
+*Account menu (9)*
+
+- [HP-L-016](#hp-l-016--open-account-menu-verify-after-login) – Open account menu `verify after login`
+- [HP-L-017](#hp-l-017--daily-goal-options-verify-after-login) – Daily goal options `verify after login`
+- [HP-L-018](#hp-l-018--change-daily-goal-verify-after-login-changes-account-data) – Change daily goal `verify after login` `Changes account data`
+- [HP-L-019](#hp-l-019--hồ-sơ-cá-nhân-link-verify-after-login) – "Hồ sơ cá nhân" link `verify after login`
+- [HP-L-020](#hp-l-020--cài-đặt--lộ-trình-link-verify-after-login) – "Cài đặt & Lộ trình" link `verify after login`
+- [HP-L-021](#hp-l-021--cài-app--thông-báo-verify-after-login) – "Cài App & Thông báo" `verify after login`
+- [HP-L-022](#hp-l-022--dark-mode-toggle-verify-after-login) – Dark mode toggle `verify after login`
+- [HP-L-023](#hp-l-023--sync-status-verify-after-login) – Sync status `verify after login`
+- [HP-L-024](#hp-l-024--close-account-menu-verify-after-login) – Close account menu `verify after login`
+
+*Shortcuts (3)*
+
+- [HP-L-025](#hp-l-025--sổ-tay-opens-notebook-verify-after-login) – "Sổ tay" opens notebook `verify after login`
+- [HP-L-026](#hp-l-026--bảng-xếp-hạng-shortcut-verify-after-login) – "Bảng xếp hạng" shortcut `verify after login`
+- [HP-L-027](#hp-l-027--tiến-độ-shortcut-verify-after-login) – "Tiến độ" shortcut `verify after login`
+
+*Daily goal (7)*
+
+- [HP-L-028](#hp-l-028--daily-goal-minutes-and-progress-bar-verify-after-login) – Daily goal minutes and progress bar `verify after login`
+- [HP-L-029](#hp-l-029--đã-đạt-badge-when-goal-met-verify-after-login) – "Đã đạt" badge when goal met `verify after login`
+- [HP-L-030](#hp-l-030--streak-and-total-days-verify-after-login) – Streak and total days `verify after login`
+- [HP-L-031](#hp-l-031--check-in-disabled-before-goal-verify-after-login) – Check-in disabled before goal `verify after login`
+- [HP-L-032](#hp-l-032--check-in-after-reaching-goal-verify-after-login-changes-account-data-once-per-day) – Check-in after reaching goal `verify after login` `Changes account data` `once per day`
+- [HP-L-033](#hp-l-033--completed-state-after-check-in-verify-after-login) – Completed state after check-in `verify after login`
+- [HP-L-034](#hp-l-034--study-time-updates-daily-goal-verify-after-login) – Study time updates daily goal `verify after login`
+
+*Feature cards (3)*
+
+- [HP-L-035](#hp-l-035--vocabulary-review-badge-verify-after-login) – Vocabulary review badge `verify after login`
+- [HP-L-036](#hp-l-036--collocations-review-badge-verify-after-login) – Collocations review badge `verify after login`
+- [HP-L-037](#hp-l-037--badges-hidden-when-nothing-to-review-verify-after-login) – Badges hidden when nothing to review `verify after login`
+
+*Calendar (4)*
+
+- [HP-L-038](#hp-l-038--studied-days-highlighted-verify-after-login) – Studied days highlighted `verify after login`
+- [HP-L-039](#hp-l-039--monthly-studied-count-verify-after-login) – Monthly studied count `verify after login`
+- [HP-L-040](#hp-l-040--days-with-notes-verify-after-login) – Days with notes `verify after login`
+- [HP-L-041](#hp-l-041--studied-days-in-previous-month-verify-after-login) – Studied days in previous month `verify after login`
+
+*Reviews (7)*
+
+- [HP-L-042](#hp-l-042--reviews-count-verify-after-login) – Reviews count `verify after login`
+- [HP-L-043](#hp-l-043--review-card-content-verify-after-login) – Review card content `verify after login`
+- [HP-L-044](#hp-l-044--review-carousel-navigation-verify-after-login) – Review carousel navigation `verify after login`
+- [HP-L-045](#hp-l-045--sửa-đánh-giá-opens-own-review-verify-after-login) – "Sửa đánh giá" opens own review `verify after login`
+- [HP-L-046](#hp-l-046--edit-review-validation-verify-after-login) – Edit review validation `verify after login`
+- [HP-L-047](#hp-l-047--save-edited-review-verify-after-login-changes-public-data-use-a-test-account) – Save edited review `verify after login` `Changes public data` `use a test account`
+- [HP-L-048](#hp-l-048--write-first-review-verify-after-login-needs-a-second-test-account) – Write first review `verify after login` `Needs a second test account`
+
+*Sync (1)*
+
+- [HP-L-049](#hp-l-049--progress-synced-across-devices-verify-after-login) – Progress synced across devices `verify after login`
 
 ---
 
