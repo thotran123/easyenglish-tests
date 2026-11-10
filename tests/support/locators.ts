@@ -43,3 +43,14 @@ export const guestSignInPopup = (page: Page) => ({
   message: page.getByText('Đăng nhập để học miễn phí'),
   googleButton: page.getByRole('button', { name: 'Đăng nhập với Google' }),
 });
+
+// Header controls at the top of <main> that show whether someone is signed in.
+export const header = (page: Page) => {
+  const main = page.getByRole('main');
+  return {
+    // The name in the greeting "Good morning, <name>!". A guest sees "bạn".
+    nameButton: page.locator('#user-name-button'),
+    // Only shown to guests. Opens the guestSignInPopup.
+    signInButton: main.getByRole('button', { name: 'Đăng nhập', exact: true }),
+  };
+};

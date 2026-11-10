@@ -1,14 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
-
-/**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
@@ -34,14 +26,24 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
+    /* Signs in once and saves the session to playwright/.auth/user.json (tests/auth.setup.ts).
+       Without credentials it is skipped. */
+    {
+      name: 'setup',
+      testMatch: /.*\.setup\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
     },
 
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
+      dependencies: ['setup'],
     },
 
     /* Mobile: emulated phones (screen size, touch, user agent). */
@@ -49,11 +51,13 @@ export default defineConfig({
     {
       name: 'mobile-galaxy-a55',
       use: { ...devices['Galaxy A55'] },
+      dependencies: ['setup'],
     },
     /* iOS: iPhone 13, runs on WebKit (Safari's engine). Needs `npx playwright install webkit`. */
     {
       name: 'mobile-iphone13',
       use: { ...devices['iPhone 13'] },
+      dependencies: ['setup'],
     },
   ],
 

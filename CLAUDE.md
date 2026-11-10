@@ -29,6 +29,6 @@ npx tsc --noEmit                         # type-check (no linter is configured)
 - `tests/*.spec.ts` holds the tests (`testDir: './tests'`). Right now there is only `smoke.spec.ts`. It checks the home page title, and checks that `/vocabulary`, `/grammars`, `/dictionary` and `/games` return HTTP 200. It makes one test per path in a loop, so the report names the exact page that broke.
 - Every test runs in 4 projects: Desktop Chrome, Desktop Firefox, Galaxy A55 (Android/Chromium) and iPhone 13 (iOS/WebKit). One test therefore produces 4 results.
 - Behavior on CI (`process.env.CI`): `forbidOnly` is on, there are 2 retries, there is 1 worker, and traces are captured on the first retry. Locally there are no retries and Playwright picks the worker count.
-- `.github/workflows/playwright.yml` runs `npx playwright test` on push/PR to `main`/`master` and uploads `playwright-report/` as an artifact.
+- `.github/workflows/playwright.yml` (CI on GitHub Actions) runs on every push, on PRs into `main`, daily at 00:00 UTC, and from the manual "Run workflow" button. It type-checks with `tsc`, runs `npx playwright test`, and uploads `playwright-report/` and `test-results/` as artifacts. CI has no Google credentials, so the `setup` project skips itself there.
 - The commented-out `dotenv` and `webServer` blocks in the config are unused scaffolding. There is no local dev server.
 - `.claude/agents/code-reviewer.md` defines a read-only `code-reviewer` subagent (bugs + readability, with Playwright-specific checks).
