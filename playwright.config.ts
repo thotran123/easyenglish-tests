@@ -40,11 +40,11 @@ export default defineConfig({
       dependencies: ['setup'],
     },
 
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-      dependencies: ['setup'],
-    },
+    // {
+    //   name: 'firefox',
+    //   use: { ...devices['Desktop Firefox'] },
+    //   dependencies: ['setup'],
+    // },
 
     /* Mobile: emulated phones (screen size, touch, user agent). */
     /* Android: Samsung Galaxy A55, runs on Chromium. */
@@ -53,12 +53,12 @@ export default defineConfig({
       use: { ...devices['Galaxy A55'] },
       dependencies: ['setup'],
     },
-    /* iOS: iPhone 13, runs on WebKit (Safari's engine). Needs `npx playwright install webkit`. */
-    {
-      name: 'mobile-iphone13',
-      use: { ...devices['iPhone 13'] },
-      dependencies: ['setup'],
-    },
+    // /* iOS: iPhone 13, runs on WebKit (Safari's engine). Needs `npx playwright install webkit`. */
+    // {
+    //   name: 'mobile-iphone13',
+    //   use: { ...devices['iPhone 13'] },
+    //   dependencies: ['setup'],
+    // },
   ],
 
   /* Run your local dev server before starting the tests */

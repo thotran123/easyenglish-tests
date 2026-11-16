@@ -29,6 +29,12 @@ export const hasCredentials = () => testUser.email !== '' && testUser.password !
 export const manualLogin = process.env.MANUAL_LOGIN === '1';
 export const refreshLogin = process.env.REFRESH_LOGIN === '1';
 
+// CONNECT_CHROME=1: copy the session from a normal Chrome you signed in to yourself, instead of
+// signing in from Playwright's browser (Google rejects that one: "This browser or app may not be secure").
+// That Chrome must be started with remote debugging on this address; see tests/auth.setup.ts.
+export const connectChrome = process.env.CONNECT_CHROME === '1';
+export const CHROME_DEBUG_URL = 'http://localhost:9222';
+
 // Where auth.setup.ts saves the signed-in browser state (cookies, localStorage and IndexedDB,
 // where Firebase keeps the session). The folder is already in .gitignore.
 export const AUTH_FILE = path.resolve(__dirname, '../../playwright/.auth/user.json');
