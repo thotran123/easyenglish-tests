@@ -38,9 +38,17 @@ jobs:
     - name: Install Playwright browsers
       run: npx playwright install --with-deps chromium firefox webkit
 
-    # No Google credentials are given to CI on purpose: Google blocks sign-ins from automated
-    # browsers. Without TEST_USER_EMAIL / TEST_USER_PASSWORD the `setup` project (tests/auth.setup.ts)
-    # skips itself and the logged-out tests run normally.
+    # Google blocks sign-ins from automated browsers, so CI never signs in itself. It restores the
+    # session saved on a developer's machine (secret PLAYWRIGHT_AUTH_STATE = gzip + base64 of
+    # playwright/.auth/user.json). Without the secret, the signed-in tests skip.
+    - name: Restore signed-in session
+      env:
+        AUTH_STATE: ${{ secrets.PLAYWRIGHT_AUTH_STATE }}
+      run: |
+        if [ -z "$AUTH_STATE" ]; then echo "No PLAYWRIGHT_AUTH_STATE secret: signed-in tests will skip."; exit 0; fi
+        mkdir -p playwright/.auth
+        echo "$AUTH_STATE" | base64 --decode | gunzip > playwright/.auth/user.json
+    
     - name: Run Playwright tests
       run: npx playwright test
 

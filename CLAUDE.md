@@ -32,3 +32,26 @@ npx tsc --noEmit                         # type-check (no linter is configured)
 - `.github/workflows/playwright.yml` (CI on GitHub Actions) runs on every push, on PRs into `main`, daily at 00:00 UTC, and from the manual "Run workflow" button. It type-checks with `tsc`, runs `npx playwright test`, and uploads `playwright-report/` and `test-results/` as artifacts. CI has no Google credentials, so the `setup` project skips itself there.
 - The commented-out `dotenv` and `webServer` blocks in the config are unused scaffolding. There is no local dev server.
 - `.claude/agents/code-reviewer.md` defines a read-only `code-reviewer` subagent (bugs + readability, with Playwright-specific checks).
+
+## Signed-in session (Google login)
+
+The site signs in with Google (Firebase popup). Google rejects every Playwright-controlled browser ("Couldn't sign you in / This browser or app may not be secure"), even with `MANUAL_LOGIN=1 --headed`. So the login is never automated: a person signs in once in a normal Chrome, and the session is copied to `playwright/.auth/user.json` (`AUTH_FILE`, git-ignored). Signed-in tests load it with `storageState`.
+
+- `tests/auth.setup.ts` (project `setup`, a dependency of every other project) runs first. If `user.json` exists and still works it re-saves it (keeps the Firebase tokens fresh). Otherwise it tries to sign in, or skips when it has no way to (always the case on CI).
+- `tests/support/credentials.ts` reads `.env` (via `process.loadEnvFile`) and exports `AUTH_FILE`, `hasSavedLogin()`, and the flags `MANUAL_LOGIN`, `REFRESH_LOGIN`, `CONNECT_CHROME`.
+- `user.json` keeps only this site's cookies, localStorage and IndexedDB (Firebase keeps the session in `firebaseLocalStorageDb`). It contains login tokens, so never commit or share it.
+
+To create the session the first time, or renew it when it expires (the `setup` project then fails or skips, and signed-in tests skip):
+
+1. Start a separate Chrome profile with remote debugging, and leave that terminal open:
+   ```bash
+   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --remote-debugging-port=9222 --user-data-dir="$HOME/.easyenglish-test-chrome"
+   ```
+2. In that window, open `https://easyenglisheveryday.vercel.app` and sign in with Google. The profile remembers the login, so this is often already done.
+3. In a second terminal, from the repo root:
+   ```bash
+   CONNECT_CHROME=1 npx playwright test --project=setup
+   ```
+   `1 passed` means `user.json` was overwritten with the new session. Then close that Chrome window. While it is open, any program on this machine can control it through port 9222.
+
+The port in step 1 must match `CHROME_DEBUG_URL` (`http://localhost:9222`) in `credentials.ts`. The GCM / `chrome://newtab` errors Chrome prints in step 1 are harmless.
