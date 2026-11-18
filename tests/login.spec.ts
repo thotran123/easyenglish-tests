@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { AUTH_FILE, hasSavedLogin, testUser } from './support/credentials';
 import { expectSignedIn, suppressInvitePromo } from './support/helpers';
-import { header } from './support/locators';
+import { header } from './support/locators/common.locators';
 
 // Login scenarios HP-L-001 and HP-L-002 from docs/homepage-scenarios.md.
 // They never sign in through Google themselves: they load the session saved by tests/auth.setup.ts.
@@ -13,7 +13,7 @@ test.use({
   storageState: async ({}, use) => {
     test.skip(
       !hasSavedLogin(),
-      'No saved session. Run: MANUAL_LOGIN=1 npx playwright test --project=setup --headed',
+      'No saved session. See "Signed-in session (Google login)" in CLAUDE.md to create one.',
     );
     await use(AUTH_FILE);
   },
