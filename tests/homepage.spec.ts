@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { collectConsoleErrors, openSidebar, suppressInvitePromo, todayDdMmYyyy } from './support/helpers';
-import { guestSignInPopup, hero } from './support/locators';
+import { guestSignInPopup } from './support/locators/common.locators';
+import { hero } from './support/locators/homepage.locators';
 
 // Homepage scenarios from docs/homepage-scenarios.md, added one at a time.
 test.describe('Homepage', () => {
