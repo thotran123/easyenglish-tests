@@ -1,16 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Credentials and saved-login settings used by tests/auth.setup.ts.
+// Saved-login settings used by tests/auth.setup.ts and the signed-in specs.
 //
-// Real values never go in this file. Put them in a `.env` file at the repo root
-// (it is git-ignored; copy `.env.example`), or set them as environment variables / CI secrets:
+// Set these in a `.env` file at the repo root (it is git-ignored; copy `.env.example`)
+// or as environment variables:
 //
-//   TEST_USER_EMAIL=...              Google account used for the tests (use a dedicated test account)
-//   TEST_USER_PASSWORD=...           its password (accounts with 2-step verification need MANUAL_LOGIN=1)
-//   TEST_USER_DISPLAY_NAME=...       optional: the name the site shows for this account
-//   MANUAL_LOGIN=1                   optional: you finish the Google sign-in yourself in a headed browser
-//   REFRESH_LOGIN=1                  optional: ignore the saved session and sign in again
+//   TEST_USER_DISPLAY_NAME=...       optional: the name the site shows for the signed-in account
+//   CONNECT_CHROME=1                 copy the session from a normal Chrome (see tests/auth.setup.ts)
 
 // Load .env if it exists. Node >= 20.12 has this built in, so no dotenv package is needed.
 const envFile = path.resolve(__dirname, '../../.env');
@@ -19,15 +16,8 @@ if (fs.existsSync(envFile)) {
 }
 
 export const testUser = {
-  email: process.env.TEST_USER_EMAIL ?? '',
-  password: process.env.TEST_USER_PASSWORD ?? '',
   displayName: process.env.TEST_USER_DISPLAY_NAME ?? '',
 };
-
-export const hasCredentials = () => testUser.email !== '' && testUser.password !== '';
-
-export const manualLogin = process.env.MANUAL_LOGIN === '1';
-export const refreshLogin = process.env.REFRESH_LOGIN === '1';
 
 // CONNECT_CHROME=1: copy the session from a normal Chrome you signed in to yourself, instead of
 // signing in from Playwright's browser (Google rejects that one: "This browser or app may not be secure").

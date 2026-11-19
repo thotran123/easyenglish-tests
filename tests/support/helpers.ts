@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { header, invitePromo, sidebar } from './locators';
+import { header, invitePromo, sidebar } from './locators/common.locators';
 
 // The site opens a "Mời bạn bè" (invite friends) promo dialog ~2-3 s after load, once per day.
 // It blocks clicks and stops other popups (e.g. the guest sign-in popup) from opening.
@@ -51,5 +51,13 @@ export function todayDdMmYyyy(): string {
 export async function expectSignedIn(page: Page, timeout = 15_000) {
   const { signInButton, nameButton } = header(page);
   await expect(nameButton).not.toHaveText('bạn', { timeout });
+  await expect(signInButton).toBeHidden();
+}
+
+// Like expectSignedIn, but works on any page (the greeting with the name is only on the homepage):
+// waits for the header avatar menu and checks there is no "Đăng nhập" button.
+export async function expectSignedInHeader(page: Page, timeout = 15_000) {
+  const { accountMenuButton, signInButton } = header(page);
+  await expect(accountMenuButton).toBeVisible({ timeout });
   await expect(signInButton).toBeHidden();
 }
