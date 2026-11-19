@@ -27,6 +27,8 @@ npx tsc --noEmit                         # type-check (no linter is configured)
 ## Structure and conventions
 
 - `tests/*.spec.ts` holds the tests (`testDir: './tests'`). Right now there is only `smoke.spec.ts`. It checks the home page title, and checks that `/vocabulary`, `/grammars`, `/dictionary` and `/games` return HTTP 200. It makes one test per path in a loop, so the report names the exact page that broke.
+- Locators are organised one file per page: `tests/support/locators/<page>.locators.ts` (`common.locators.ts` for the header, sidebar and site-wide popups; `homepage.locators.ts`; `vocabulary.locators.ts`). Put a new page's locators in its own file; specs import from the page file directly (no barrel).
+- `tests/srs.spec.ts` holds the SRS scenarios from `docs/srs-scenarios.md` (signed-in, via `storageState`). Use `expectSignedInHeader()` (helpers.ts) to check sign-in on pages other than `/`; `expectSignedIn()` needs the homepage greeting.
 - Every test runs in 4 projects: Desktop Chrome, Desktop Firefox, Galaxy A55 (Android/Chromium) and iPhone 13 (iOS/WebKit). One test therefore produces 4 results.
 - Behavior on CI (`process.env.CI`): `forbidOnly` is on, there are 2 retries, there is 1 worker, and traces are captured on the first retry. Locally there are no retries and Playwright picks the worker count.
 - `.github/workflows/playwright.yml` (CI on GitHub Actions) runs on every push, on PRs into `main`, daily at 00:00 UTC, and from the manual "Run workflow" button. It type-checks with `tsc`, runs `npx playwright test`, and uploads `playwright-report/` and `test-results/` as artifacts. CI has no Google credentials, so the `setup` project skips itself there.
@@ -35,10 +37,10 @@ npx tsc --noEmit                         # type-check (no linter is configured)
 
 ## Signed-in session (Google login)
 
-The site signs in with Google (Firebase popup). Google rejects every Playwright-controlled browser ("Couldn't sign you in / This browser or app may not be secure"), even with `MANUAL_LOGIN=1 --headed`. So the login is never automated: a person signs in once in a normal Chrome, and the session is copied to `playwright/.auth/user.json` (`AUTH_FILE`, git-ignored). Signed-in tests load it with `storageState`.
+The site signs in with Google (Firebase popup). Google rejects every Playwright-controlled browser ("Couldn't sign you in / This browser or app may not be secure"), even headed with a person typing the password. So the login is never automated: a person signs in once in a normal Chrome, and the session is copied to `playwright/.auth/user.json` (`AUTH_FILE`, git-ignored). Signed-in tests load it with `storageState`.
 
-- `tests/auth.setup.ts` (project `setup`, a dependency of every other project) runs first. If `user.json` exists and still works it re-saves it (keeps the Firebase tokens fresh). Otherwise it tries to sign in, or skips when it has no way to (always the case on CI).
-- `tests/support/credentials.ts` reads `.env` (via `process.loadEnvFile`) and exports `AUTH_FILE`, `hasSavedLogin()`, and the flags `MANUAL_LOGIN`, `REFRESH_LOGIN`, `CONNECT_CHROME`.
+- `tests/auth.setup.ts` (project `setup`, a dependency of every other project) runs first. It never signs in itself. With `CONNECT_CHROME=1` it copies the session from a signed-in Chrome into `user.json`. Otherwise, if `user.json` exists and still works, it re-saves it (keeps the Firebase tokens fresh); if the file is missing or expired it skips (always the case on CI).
+- `tests/support/credentials.ts` reads `.env` (via `process.loadEnvFile`) and exports `AUTH_FILE`, `hasSavedLogin()`, `testUser.displayName` (`TEST_USER_DISPLAY_NAME`, optional) and the `CONNECT_CHROME` flag.
 - `user.json` keeps only this site's cookies, localStorage and IndexedDB (Firebase keeps the session in `firebaseLocalStorageDb`). It contains login tokens, so never commit or share it.
 
 To create the session the first time, or renew it when it expires (the `setup` project then fails or skips, and signed-in tests skip):
