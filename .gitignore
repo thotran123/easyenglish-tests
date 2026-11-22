@@ -6,6 +6,7 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+/tests/learn.ts
 
 # Local secrets (test account credentials)
 .env

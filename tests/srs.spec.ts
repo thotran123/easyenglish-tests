@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { AUTH_FILE, hasSavedLogin } from './support/credentials';
-import { expectSignedInHeader, suppressInvitePromo } from './support/helpers';
-import { srsStatsBox } from './support/locators/vocabulary.locators';
+import { suppressInvitePromo } from './support/helpers';
+import { SRS_STAT } from './support/locators/vocabulary.locators';
+import { VocabularyPage } from './support/pages/vocabulary.page';
 
 // SRS scenarios from docs/srs-scenarios.md, added one at a time.
 // Signed-in cases (SRS-L) load the session saved by tests/auth.setup.ts; with no saved session they skip.
@@ -27,28 +28,33 @@ test.describe('SRS', () => {
   });
 
   test('SRS-L-001 stats box shows all labels', async ({ page }) => {
-    await page.goto('/vocabulary');
-    // Fail clearly if the session has expired, instead of reporting a missing stats box.
-    await expectSignedInHeader(page);
-
-    const box = srsStatsBox(page);
+    const vocabulary = new VocabularyPage(page);
+    await vocabulary.gotoSignedIn();
+    const box = vocabulary.stats;
     await expect(box.root).toBeVisible();
 
-    const tiles: Array<[label: string, format: RegExp]> = [
-      ['Tổng số Thẻ', COUNT],
-      ['Đến Hạn', COUNT],
-      ['Phiên ôn tập', COUNT],
-      ['Độ Chính xác', PERCENT],
-      ['Đang Học', COUNT],
-      ['Đang Ôn tập', COUNT],
-      ['Thành thạo', COUNT],
-      ['Tổng Thẻ', COUNT],
-    ];
-
+    // Every tile shows a count, except "Độ Chính xác", which shows a percentage.
     // Soft assertions: one run reports every missing label or bad value, not just the first.
-    for (const [label, format] of tiles) {
+    for (const label of Object.values(SRS_STAT)) {
+      const format = label === SRS_STAT.accuracy ? PERCENT : COUNT;
       await expect.soft(box.label(label), `label "${label}"`).toBeVisible();
       await expect.soft(box.value(label), `value of "${label}"`).toHaveText(format);
     }
+  });
+
+  test('SRS-L-002 totals add up', async ({ page }) => {
+    const vocabulary = new VocabularyPage(page);
+    await vocabulary.gotoSignedIn();
+    // Without this wait every tile still reads 0, and 0 = 0 + 0 + 0 would pass without checking anything.
+    await vocabulary.waitForStats();
+
+    const total = await vocabulary.readStat(SRS_STAT.totalCards);
+    const totalBar = await vocabulary.readStat(SRS_STAT.totalBar);
+    const learning = await vocabulary.readStat(SRS_STAT.learning);
+    const reviewing = await vocabulary.readStat(SRS_STAT.reviewing);
+    const mastered = await vocabulary.readStat(SRS_STAT.mastered);
+
+    expect.soft(totalBar, '"Tổng Thẻ" = "Tổng số Thẻ"').toBe(total);
+    expect.soft(learning + reviewing + mastered, '"Đang Học" + "Đang Ôn tập" + "Thành thạo" = "Tổng số Thẻ"').toBe(total);
   });
 });
