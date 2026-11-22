@@ -3,6 +3,7 @@ import { AUTH_FILE, hasSavedLogin } from './support/credentials';
 import { suppressInvitePromo } from './support/helpers';
 import { SRS_STAT } from './support/locators/vocabulary.locators';
 import { VocabularyPage } from './support/pages/vocabulary.page';
+import { countByStatus, readFirestoreSrsRecords, readLocalSrsRecords } from './support/srs-data';
 
 // SRS scenarios from docs/srs-scenarios.md, added one at a time.
 // Signed-in cases (SRS-L) load the session saved by tests/auth.setup.ts; with no saved session they skip.
@@ -44,17 +45,47 @@ test.describe('SRS', () => {
 
   test('SRS-L-002 totals add up', async ({ page }) => {
     const vocabulary = new VocabularyPage(page);
+    // Firestore can only be read once the page shows the user as signed in (fresh sign-in token).
     await vocabulary.gotoSignedIn();
-    // Without this wait every tile still reads 0, and 0 = 0 + 0 + 0 would pass without checking anything.
-    await vocabulary.waitForStats();
 
+    // 1) The database is the source of truth: read it first.
+    const firestore = await readFirestoreSrsRecords(page);
+    const firestoreCount = Object.keys(firestore).length;
+    // With no card at all, every check below would be 0 = 0 and prove nothing.
+    expect(firestoreCount, 'the test account has no SRS card yet (rate one card first)').toBeGreaterThan(0);
+
+    // 2) The stats box and localStorage start empty and fill in a few seconds later, so wait for them
+    //    to catch up with the database instead of reading them right away.
+    //    "Tổng số Thẻ" = number of cards in Firestore:
+    await vocabulary.waitForStats(firestoreCount);
+    //    Number of cards in localStorage = number in Firestore (expect.poll retries until it matches):
+    await expect
+      .poll(async () => Object.keys(await readLocalSrsRecords(page)).length, {
+        message: 'number of cards in localStorage = number in Firestore',
+      })
+      .toBe(firestoreCount);
+    const local = await readLocalSrsRecords(page);
+
+    // 3) Read the numbers in the stats box.
     const total = await vocabulary.readStat(SRS_STAT.totalCards);
     const totalBar = await vocabulary.readStat(SRS_STAT.totalBar);
     const learning = await vocabulary.readStat(SRS_STAT.learning);
     const reviewing = await vocabulary.readStat(SRS_STAT.reviewing);
     const mastered = await vocabulary.readStat(SRS_STAT.mastered);
 
+    // 4) The box adds up.
     expect.soft(totalBar, '"Tổng Thẻ" = "Tổng số Thẻ"').toBe(total);
     expect.soft(learning + reviewing + mastered, '"Đang Học" + "Đang Ôn tập" + "Thành thạo" = "Tổng số Thẻ"').toBe(total);
+
+    // 5) Each status tile = number of cards with that status, in localStorage and in Firestore.
+    const statusTiles: Array<[status: string, label: string, shown: number]> = [
+      ['learning', SRS_STAT.learning, learning],
+      ['reviewing', SRS_STAT.reviewing, reviewing],
+      ['mastered', SRS_STAT.mastered, mastered],
+    ];
+    for (const [status, label, shown] of statusTiles) {
+      expect.soft(countByStatus(local, status), `localStorage cards with status "${status}" = "${label}"`).toBe(shown);
+      expect.soft(countByStatus(firestore, status), `Firestore cards with status "${status}" = "${label}"`).toBe(shown);
+    }
   });
 });
