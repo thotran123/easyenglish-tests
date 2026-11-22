@@ -32,7 +32,7 @@ npx tsc --noEmit                         # type-check (no linter is configured)
 - `tests/srs.spec.ts` holds the SRS scenarios from `docs/srs-scenarios.md` (signed-in, via `storageState`). Use `expectSignedInHeader()` (helpers.ts) to check sign-in on pages other than `/`; `expectSignedIn()` needs the homepage greeting.
 - Every test runs in 4 projects: Desktop Chrome, Desktop Firefox, Galaxy A55 (Android/Chromium) and iPhone 13 (iOS/WebKit). One test therefore produces 4 results.
 - Behavior on CI (`process.env.CI`): `forbidOnly` is on, there are 2 retries, there is 1 worker, and traces are captured on the first retry. Locally there are no retries and Playwright picks the worker count.
-- `.github/workflows/playwright.yml` (CI on GitHub Actions) runs on every push, on PRs into `main`, daily at 00:00 UTC, and from the manual "Run workflow" button. It type-checks with `tsc`, runs `npx playwright test`, and uploads `playwright-report/` and `test-results/` as artifacts. CI has no Google credentials, so the `setup` project skips itself there.
+- `.github/workflows/playwright.yml` (CI on GitHub Actions) runs on every push, on PRs into `main`, daily at 00:00 UTC, and from the manual "Run workflow" button. It type-checks with `tsc`, runs `npx playwright test`, and uploads `playwright-report/` and `test-results/` as artifacts. CI gets the signed-in session from the GitHub secret `PLAYWRIGHT_AUTH_STATE` (step "Restore signed-in session", see step 4 below); without that secret the `setup` project and the signed-in tests skip.
 - The commented-out `dotenv` and `webServer` blocks in the config are unused scaffolding. There is no local dev server.
 - `.claude/agents/code-reviewer.md` defines a read-only `code-reviewer` subagent (bugs + readability, with Playwright-specific checks).
 
@@ -40,7 +40,7 @@ npx tsc --noEmit                         # type-check (no linter is configured)
 
 The site signs in with Google (Firebase popup). Google rejects every Playwright-controlled browser ("Couldn't sign you in / This browser or app may not be secure"), even headed with a person typing the password. So the login is never automated: a person signs in once in a normal Chrome, and the session is copied to `playwright/.auth/user.json` (`AUTH_FILE`, git-ignored). Signed-in tests load it with `storageState`.
 
-- `tests/auth.setup.ts` (project `setup`, a dependency of every other project) runs first. It never signs in itself. With `CONNECT_CHROME=1` it copies the session from a signed-in Chrome into `user.json`. Otherwise, if `user.json` exists and still works, it re-saves it (keeps the Firebase tokens fresh); if the file is missing or expired it skips (always the case on CI).
+- `tests/auth.setup.ts` (project `setup`, a dependency of every other project) runs first. It never signs in itself. With `CONNECT_CHROME=1` it copies the session from a signed-in Chrome into `user.json`. Otherwise, if `user.json` exists and still works, it re-saves it (keeps the Firebase tokens fresh); if the file is missing or expired it skips (on CI: when the `PLAYWRIGHT_AUTH_STATE` secret is missing or holds an expired session).
 - `tests/support/credentials.ts` reads `.env` (via `process.loadEnvFile`) and exports `AUTH_FILE`, `hasSavedLogin()`, `testUser.displayName` (`TEST_USER_DISPLAY_NAME`, optional) and the `CONNECT_CHROME` flag.
 - `user.json` keeps only this site's cookies, localStorage and IndexedDB (Firebase keeps the session in `firebaseLocalStorageDb`). It contains login tokens, so never commit or share it.
 
@@ -56,5 +56,10 @@ To create the session the first time, or renew it when it expires (the `setup` p
    CONNECT_CHROME=1 npx playwright test --project=setup
    ```
    `1 passed` means `user.json` was overwritten with the new session. Then close that Chrome window. While it is open, any program on this machine can control it through port 9222.
+4. Update the CI copy of the session. CI never sees your local `user.json`: it rebuilds it from the GitHub secret `PLAYWRIGHT_AUTH_STATE` (gzip + base64 of the file), so CI keeps using the old session until you run:
+   ```bash
+   gzip -c playwright/.auth/user.json | base64 | gh secret set PLAYWRIGHT_AUTH_STATE
+   ```
+   Then re-run the CI workflow. Do this every time you redo steps 1–3, so CI and your machine sign in as the same account with the same session.
 
 The port in step 1 must match `CHROME_DEBUG_URL` (`http://localhost:9222`) in `credentials.ts`. The GCM / `chrome://newtab` errors Chrome prints in step 1 are harmless.
