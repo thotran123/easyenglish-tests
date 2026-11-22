@@ -4,6 +4,18 @@ import type { Page } from '@playwright/test';
 
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// Labels of the tiles in the "Thống Kê Học Tập & SRS" box. Change them here if the site renames a tile.
+export const SRS_STAT = {
+  totalCards: 'Tổng số Thẻ',
+  due: 'Đến Hạn',
+  sessions: 'Phiên ôn tập',
+  accuracy: 'Độ Chính xác',
+  learning: 'Đang Học',
+  reviewing: 'Đang Ôn tập',
+  mastered: 'Thành thạo',
+  totalBar: 'Tổng Thẻ',
+} as const;
+
 // The box "Thống Kê Học Tập & SRS" (study stats). It has two kinds of tiles, and in both the label
 // and its number are <span>s inside one tile element:
 //   top tiles:          <div><span>Tổng số Thẻ</span><span>12</span></div>
