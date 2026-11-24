@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { AUTH_FILE, hasSavedLogin } from './support/credentials';
 import { suppressInvitePromo } from './support/helpers';
-import { SRS_STAT } from './support/locators/vocabulary.locators';
+import * as vocabLocator from './support/locators/vocabulary.locators';
 import { VocabularyPage } from './support/pages/vocabulary.page';
 import { countByStatus, readFirestoreSrsRecords, readLocalSrsRecords } from './support/srs-data';
 
@@ -26,7 +26,7 @@ const PERCENT = /^\d+(?:[.,]\d+)?\s?%$/;
 // Đọc tất cả các số trong ô stats thành một object { tên: giá trị }
 async function readAllStats(vp: VocabularyPage) {
   const stats: Record<string, number> = {};
-  for (const [name, label] of Object.entries(SRS_STAT)) {
+  for (const [name, label] of Object.entries(vocabLocator.SRS_STAT)) {
     stats[name] = await vp.readStat(label);
   }
   return stats;
@@ -45,8 +45,8 @@ test.describe('SRS', () => {
 
     // Every tile shows a count, except "Độ Chính xác", which shows a percentage.
     // Soft assertions: one run reports every missing label or bad value, not just the first.
-    for (const label of Object.values(SRS_STAT)) {
-      const format = label === SRS_STAT.accuracy ? PERCENT : COUNT;
+    for (const label of Object.values(vocabLocator.SRS_STAT)) {
+      const format = label === vocabLocator.SRS_STAT.accuracy ? PERCENT : COUNT;
       await expect.soft(box.label(label), `label "${label}"`).toBeVisible();
       await expect.soft(box.value(label), `value of "${label}"`).toHaveText(format);
     }
@@ -76,11 +76,11 @@ test.describe('SRS', () => {
     const local = await readLocalSrsRecords(page);
 
     // 3) Read the numbers in the stats box.
-    const total = await vocabulary.readStat(SRS_STAT.totalCards);
-    const totalBar = await vocabulary.readStat(SRS_STAT.totalBar);
-    const learning = await vocabulary.readStat(SRS_STAT.learning);
-    const reviewing = await vocabulary.readStat(SRS_STAT.reviewing);
-    const mastered = await vocabulary.readStat(SRS_STAT.mastered);
+    const total = await vocabulary.readStat(vocabLocator.SRS_STAT.totalCards);
+    const totalBar = await vocabulary.readStat(vocabLocator.SRS_STAT.totalBar);
+    const learning = await vocabulary.readStat(vocabLocator.SRS_STAT.learning);
+    const reviewing = await vocabulary.readStat(vocabLocator.SRS_STAT.reviewing);
+    const mastered = await vocabulary.readStat(vocabLocator.SRS_STAT.mastered);
 
     // 4) The box adds up.
     expect.soft(totalBar, '"Tổng Thẻ" = "Tổng số Thẻ"').toBe(total);
@@ -88,9 +88,9 @@ test.describe('SRS', () => {
 
     // 5) Each status tile = number of cards with that status, in localStorage and in Firestore.
     const statusTiles: Array<[status: string, label: string, shown: number]> = [
-      ['learning', SRS_STAT.learning, learning],
-      ['reviewing', SRS_STAT.reviewing, reviewing],
-      ['mastered', SRS_STAT.mastered, mastered],
+      ['learning', vocabLocator.SRS_STAT.learning, learning],
+      ['reviewing', vocabLocator.SRS_STAT.reviewing, reviewing],
+      ['mastered', vocabLocator.SRS_STAT.mastered, mastered],
     ];
     for (const [status, label, shown] of statusTiles) {
       expect.soft(countByStatus(local, status), `localStorage cards with status "${status}" = "${label}"`).toBe(shown);
@@ -121,6 +121,17 @@ test.describe('SRS', () => {
     expect(await readAllStats(vocabulary2)).toEqual(before);
 
     await context2.close();
+  });
+
+  test('SRS-L-004 – Flipping a card without rating changes nothing', async ({page}) => {
+    const vocabulary = new VocabularyPage(page);
+    await vocabulary.gotoSignedIn();
+
+    //Open first unit
+    await vocabulary.openCollection('3000 Từ Vựng Oxford thiết yếu');
+    await expect(page).toHaveURL(/\/vocabulary\/oxford_3000$/);
+    await vocabulary.openUnit('Unit 1');  
+    await vocabLocator.unitActions(page).startOrContinue.click();
   });
 
 });
