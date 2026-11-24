@@ -23,6 +23,15 @@ const COUNT = /^\d{1,3}(?:[.,]\d{3})*$/;
 // A percentage such as "80%", "80 %" or "80.5%".
 const PERCENT = /^\d+(?:[.,]\d+)?\s?%$/;
 
+// Đọc tất cả các số trong ô stats thành một object { tên: giá trị }
+async function readAllStats(vp: VocabularyPage) {
+  const stats: Record<string, number> = {};
+  for (const [name, label] of Object.entries(SRS_STAT)) {
+    stats[name] = await vp.readStat(label);
+  }
+  return stats;
+}
+
 test.describe('SRS', () => {
   test.beforeEach(async ({ page }) => {
     await suppressInvitePromo(page);
@@ -88,4 +97,30 @@ test.describe('SRS', () => {
       expect.soft(countByStatus(firestore, status), `Firestore cards with status "${status}" = "${label}"`).toBe(shown);
     }
   });
+
+  test('SRS-L-003 – Stats are the same after reload and in a second browser',
+  async ({ page, browser, baseURL }) => {
+    // Mở trang và đọc stats ban đầu
+    const vocabulary = new VocabularyPage(page);
+    await vocabulary.gotoSignedIn();
+    await vocabulary.waitForStats();
+    const before = await readAllStats(vocabulary);
+
+    // 1. Sau khi reload, stats không đổi
+    await page.reload();
+    await vocabulary.waitForStats();
+    expect(await readAllStats(vocabulary)).toEqual(before);
+
+    // 2. Ở trình duyệt thứ hai (cùng tài khoản), stats không đổi
+    const context2 = await browser.newContext({ baseURL, storageState: AUTH_FILE });
+    const page2 = await context2.newPage();
+    await suppressInvitePromo(page2);
+    const vocabulary2 = new VocabularyPage(page2);
+    await vocabulary2.gotoSignedIn();
+    await vocabulary2.waitForStats();
+    expect(await readAllStats(vocabulary2)).toEqual(before);
+
+    await context2.close();
+  });
+
 });
