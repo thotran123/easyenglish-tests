@@ -24,10 +24,16 @@ const COUNT = /^\d{1,3}(?:[.,]\d{3})*$/;
 const PERCENT = /^\d+(?:[.,]\d+)?\s?%$/;
 
 // Đọc tất cả các số trong ô stats thành một object { tên: giá trị }
+// Reads every number in the stats box into an object { name: value }.
+// "Độ Chính xác" is a percentage, so it is read with readAccuracy instead of readStat.
 async function readAllStats(vp: VocabularyPage) {
   const stats: Record<string, number> = {};
   for (const [name, label] of Object.entries(vocabLocator.SRS_STAT)) {
-    stats[name] = await vp.readStat(label);
+    if (label === vocabLocator.SRS_STAT.accuracy) {
+      stats[name] = await vp.readAccuracy();
+    } else {
+      stats[name] = await vp.readStat(label);
+    }
   }
   return stats;
 }
@@ -57,17 +63,21 @@ test.describe('SRS', () => {
     // Firestore can only be read once the page shows the user as signed in (fresh sign-in token).
     await vocabulary.gotoSignedIn();
 
-    // 1) The database is the source of truth: read it first.
+    // Read the data from Firestore database
     const firestore = await readFirestoreSrsRecords(page);
     const firestoreCount = Object.keys(firestore).length;
     // With no card at all, every check below would be 0 = 0 and prove nothing.
     expect(firestoreCount, 'the test account has no SRS card yet (rate one card first)').toBeGreaterThan(0);
 
-    // 2) The stats box and localStorage start empty and fill in a few seconds later, so wait for them
-    //    to catch up with the database instead of reading them right away.
     //    "Tổng số Thẻ" = number of cards in Firestore:
     await vocabulary.waitForStats(firestoreCount);
-    //    Number of cards in localStorage = number in Firestore (expect.poll retries until it matches):
+
+    // Read the numbers in the stats box on UI
+    const stat = await readAllStats (vocabulary);
+    expect.soft(stat.totalBar, '"Tổng Thẻ" = "Tổng số Thẻ"').toBe(stat.totalCards);
+    expect.soft(stat.learning + stat.reviewing + stat.mastered, '"Đang Học" + "Đang Ôn tập" + "Thành thạo" = "Tổng số Thẻ"').toBe(stat.totalCards);
+
+    // Read data on localStorage
     await expect
       .poll(async () => Object.keys(await readLocalSrsRecords(page)).length, {
         message: 'number of cards in localStorage = number in Firestore',
@@ -75,22 +85,11 @@ test.describe('SRS', () => {
       .toBe(firestoreCount);
     const local = await readLocalSrsRecords(page);
 
-    // 3) Read the numbers in the stats box.
-    const total = await vocabulary.readStat(vocabLocator.SRS_STAT.totalCards);
-    const totalBar = await vocabulary.readStat(vocabLocator.SRS_STAT.totalBar);
-    const learning = await vocabulary.readStat(vocabLocator.SRS_STAT.learning);
-    const reviewing = await vocabulary.readStat(vocabLocator.SRS_STAT.reviewing);
-    const mastered = await vocabulary.readStat(vocabLocator.SRS_STAT.mastered);
-
-    // 4) The box adds up.
-    expect.soft(totalBar, '"Tổng Thẻ" = "Tổng số Thẻ"').toBe(total);
-    expect.soft(learning + reviewing + mastered, '"Đang Học" + "Đang Ôn tập" + "Thành thạo" = "Tổng số Thẻ"').toBe(total);
-
-    // 5) Each status tile = number of cards with that status, in localStorage and in Firestore.
+    // Each status tile = number of cards with that status, in localStorage and in Firestore.
     const statusTiles: Array<[status: string, label: string, shown: number]> = [
-      ['learning', vocabLocator.SRS_STAT.learning, learning],
-      ['reviewing', vocabLocator.SRS_STAT.reviewing, reviewing],
-      ['mastered', vocabLocator.SRS_STAT.mastered, mastered],
+      ['learning', vocabLocator.SRS_STAT.learning, stat.learning],
+      ['reviewing', vocabLocator.SRS_STAT.reviewing, stat.reviewing],
+      ['mastered', vocabLocator.SRS_STAT.mastered, stat.mastered],
     ];
     for (const [status, label, shown] of statusTiles) {
       expect.soft(countByStatus(local, status), `localStorage cards with status "${status}" = "${label}"`).toBe(shown);
@@ -123,15 +122,41 @@ test.describe('SRS', () => {
     await context2.close();
   });
 
-  test('SRS-L-004 – Flipping a card without rating changes nothing', async ({page}) => {
+  test('SRS-L-004 – Flipping a card without rating changes nothing', async ({page, isMobile}) => {
     const vocabulary = new VocabularyPage(page);
     await vocabulary.gotoSignedIn();
 
-    //Open first unit
+    // 1) Before: Firestore, the stats box and localStorage
+    const firestoreBefore = await readFirestoreSrsRecords(page);
+    const cardCount = Object.keys(firestoreBefore).length;
+    await vocabulary.waitForStats(cardCount);
+    const statsBefore = await readAllStats(vocabulary);
+    const localBefore = await readLocalSrsRecords(page);
+
+    // 2) Open Unit 1 in Flashcards mode
     await vocabulary.openCollection('3000 Từ Vựng Oxford thiết yếu');
     await expect(page).toHaveURL(/\/vocabulary\/oxford_3000$/);
-    await vocabulary.openUnit('Unit 1');  
+    await vocabulary.openUnit('Unit 1', isMobile);
     await vocabLocator.unitActions(page).startOrContinue.click();
+    await vocabLocator.studyMode(page, vocabLocator.STUDY_MODE.flashcards).click();
+
+    // 3) Flip the card and flip it back, without rating it
+    await vocabulary.expectCardSide('front');
+    await vocabLocator.flashcard(page).root.click(); // flip with the mouse
+    await vocabulary.expectCardSide('back');
+    await page.keyboard.press('Space'); // flip back with the Space key
+    await vocabulary.expectCardSide('front');
+    
+    // 4) Back on /vocabulary: nothing changed
+    await vocabLocator.backToVocabulary(page).click();
+    await vocabulary.waitForStats(cardCount);
+    expect(await readAllStats(vocabulary), 'stats box').toEqual(statsBefore);
+    expect(await readLocalSrsRecords(page), 'localStorage').toEqual(localBefore);
+    expect(await readFirestoreSrsRecords(page), 'Firestore').toEqual(firestoreBefore);
   });
+
+  test.fixme('SRS-L-005 – "Trước" / "Tiếp theo" without rating changes nothing', async ({page}) => {
+
+  })
 
 });

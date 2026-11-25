@@ -43,6 +43,8 @@ export const collectionCard = (page: Page, title: string) =>
 // =============================================================================================
 // 2) Collection page (e.g. /vocabulary/oxford_3000): units and study modes
 // =============================================================================================
+export const backToVocabulary = (page:Page) => page.getByRole('link', {name: 'Trở lại', exact: true})
+
 export const unitCard = (page: Page, unitTitle: string) =>
   page.getByRole('button').filter({has: page.getByText(unitTitle, {exact:true})})
 

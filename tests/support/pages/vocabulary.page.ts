@@ -37,13 +37,33 @@ export class VocabularyPage {
     return Number(text.replace(/[.,\s]/g, ''));
   }
 
-  // vocabulary.page.ts
+  // "Độ Chính xác" as a number: "60%" → 60, "80.5%" → 80.5, "80,5 %" → 80.5.
+  async readAccuracy(): Promise<number> {
+    const text = await this.stats.value(vocabLocator.SRS_STAT.accuracy).innerText();
+    return Number(text.replace('%', '').replace(',', '.').trim());
+  }
+
+  // collection page
   async openCollection(title: string) {
     await vocabLocator.collectionCard(this.page, title).click();
   }
 
-  async openUnit(unitTitle: string) {
+  async openUnit(unitTitle: string, isMobile: boolean) {
+    if (isMobile) {
+      await this.page.getByRole('button', { name: 'Danh sách Unit' }).click();
+    }
     await vocabLocator.unitCard(this.page, unitTitle).click();
   }
 
+  // Flashcard
+  // Checks which side of the flashcard is showing: the flip layer is turned 0deg (front) or 180deg (back).
+  // expect.poll retries, because the flip takes about half a second.
+  async expectCardSide(side: 'front' | 'back') {
+    const expected = side === 'front' ? 'rotateY(0deg)' : 'rotateY(180deg)';
+    const flipLayer = vocabLocator.flashcard(this.page).flipLayer;
+    // Reads the rotation of the card right now, e.g. 'rotateY(180deg)'.
+    const readRotation = () => flipLayer.evaluate((element) => element.style.transform);
+    // Reads it again and again until it equals `expected` (fails after 5 s).
+    await expect.poll(readRotation).toBe(expected);
+  }
 }
