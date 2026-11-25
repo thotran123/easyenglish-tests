@@ -43,6 +43,21 @@ export class VocabularyPage {
     return Number(text.replace('%', '').replace(',', '.').trim());
   }
 
+    // Reads every number in the stats box into an object { name: value }, e.g.
+  // { totalCards: 2, due: 2, sessions: 0, accuracy: 60, learning: 1, reviewing: 1, mastered: 0, totalBar: 2 }.
+  // "Độ Chính xác" is a percentage, so it is read with readAccuracy instead of readStat.
+  async readAllStats(): Promise<Record<string, number>> {
+    const stats: Record<string, number> = {};
+    for (const [name, label] of Object.entries(vocabLocator.SRS_STAT)) {
+      if (label === vocabLocator.SRS_STAT.accuracy) {
+        stats[name] = await this.readAccuracy();
+      } else {
+        stats[name] = await this.readStat(label);
+      }
+    }
+    return stats;
+  }
+
   // collection page
   async openCollection(title: string) {
     await vocabLocator.collectionCard(this.page, title).click();
@@ -65,5 +80,11 @@ export class VocabularyPage {
     const readRotation = () => flipLayer.evaluate((element) => element.style.transform);
     // Reads it again and again until it equals `expected` (fails after 5 s).
     await expect.poll(readRotation).toBe(expected);
+  }
+
+  // The number of the card shown in Flashcards mode: "3 / 65" → 3.
+  async readCardNumber(): Promise<number> {
+    const text = await vocabLocator.cardCounter(this.page).innerText();
+    return Number(text.split('/')[0].trim());
   }
 }

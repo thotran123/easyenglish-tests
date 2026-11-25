@@ -23,21 +23,6 @@ const COUNT = /^\d{1,3}(?:[.,]\d{3})*$/;
 // A percentage such as "80%", "80 %" or "80.5%".
 const PERCENT = /^\d+(?:[.,]\d+)?\s?%$/;
 
-// Đọc tất cả các số trong ô stats thành một object { tên: giá trị }
-// Reads every number in the stats box into an object { name: value }.
-// "Độ Chính xác" is a percentage, so it is read with readAccuracy instead of readStat.
-async function readAllStats(vp: VocabularyPage) {
-  const stats: Record<string, number> = {};
-  for (const [name, label] of Object.entries(vocabLocator.SRS_STAT)) {
-    if (label === vocabLocator.SRS_STAT.accuracy) {
-      stats[name] = await vp.readAccuracy();
-    } else {
-      stats[name] = await vp.readStat(label);
-    }
-  }
-  return stats;
-}
-
 test.describe('SRS', () => {
   test.beforeEach(async ({ page }) => {
     await suppressInvitePromo(page);
@@ -73,7 +58,7 @@ test.describe('SRS', () => {
     await vocabulary.waitForStats(firestoreCount);
 
     // Read the numbers in the stats box on UI
-    const stat = await readAllStats (vocabulary);
+    const stat = await vocabulary.readAllStats ();
     expect.soft(stat.totalBar, '"Tổng Thẻ" = "Tổng số Thẻ"').toBe(stat.totalCards);
     expect.soft(stat.learning + stat.reviewing + stat.mastered, '"Đang Học" + "Đang Ôn tập" + "Thành thạo" = "Tổng số Thẻ"').toBe(stat.totalCards);
 
@@ -103,12 +88,12 @@ test.describe('SRS', () => {
     const vocabulary = new VocabularyPage(page);
     await vocabulary.gotoSignedIn();
     await vocabulary.waitForStats();
-    const before = await readAllStats(vocabulary);
+    const before = await vocabulary.readAllStats();
 
     // 1. Sau khi reload, stats không đổi
     await page.reload();
     await vocabulary.waitForStats();
-    expect(await readAllStats(vocabulary)).toEqual(before);
+    expect(await vocabulary.readAllStats()).toEqual(before);
 
     // 2. Ở trình duyệt thứ hai (cùng tài khoản), stats không đổi
     const context2 = await browser.newContext({ baseURL, storageState: AUTH_FILE });
@@ -117,7 +102,7 @@ test.describe('SRS', () => {
     const vocabulary2 = new VocabularyPage(page2);
     await vocabulary2.gotoSignedIn();
     await vocabulary2.waitForStats();
-    expect(await readAllStats(vocabulary2)).toEqual(before);
+    expect(await vocabulary2.readAllStats()).toEqual(before);
 
     await context2.close();
   });
@@ -130,7 +115,7 @@ test.describe('SRS', () => {
     const firestoreBefore = await readFirestoreSrsRecords(page);
     const cardCount = Object.keys(firestoreBefore).length;
     await vocabulary.waitForStats(cardCount);
-    const statsBefore = await readAllStats(vocabulary);
+    const statsBefore = await vocabulary.readAllStats();
     const localBefore = await readLocalSrsRecords(page);
 
     // 2) Open Unit 1 in Flashcards mode
@@ -150,9 +135,46 @@ test.describe('SRS', () => {
     // 4) Back on /vocabulary: nothing changed
     await vocabLocator.backToVocabulary(page).click();
     await vocabulary.waitForStats(cardCount);
-    expect(await readAllStats(vocabulary), 'stats box').toEqual(statsBefore);
+    expect(await vocabulary.readAllStats(), 'stats box').toEqual(statsBefore);
     expect(await readLocalSrsRecords(page), 'localStorage').toEqual(localBefore);
     expect(await readFirestoreSrsRecords(page), 'Firestore').toEqual(firestoreBefore);
   });
+
+  test('SRS-L-005 – "Trước" / "Tiếp theo" without rating changes nothing', async ({page,isMobile}) => {
+    const vocabulary = new VocabularyPage(page);
+    await vocabulary.gotoSignedIn();
+
+    // 1) Before: Firestore, the stats box and localStorage
+    const firestoreBefore = await readFirestoreSrsRecords(page);
+    const cardCount = Object.keys(firestoreBefore).length;
+    await vocabulary.waitForStats(cardCount);
+    const statsBefore = await vocabulary.readAllStats();
+    const localBefore = await readLocalSrsRecords(page);
+
+    // 2) Open Unit 1 in Flashcards mode
+    await vocabulary.openCollection('3000 Từ Vựng Oxford thiết yếu');
+    await expect(page).toHaveURL(/\/vocabulary\/oxford_3000$/);
+    await vocabulary.openUnit('Unit 1', isMobile);
+    await vocabLocator.unitActions(page).startOrContinue.click();
+    await vocabLocator.studyMode(page, vocabLocator.STUDY_MODE.flashcards).click();
+
+    // 3) 
+    const start = await vocabulary.readCardNumber();
+    for (let i = 1; i <= 3; i++) {
+      await vocabLocator.navButton(page, vocabLocator.NAV_BUTTON.next).click();
+      await expect.poll(() => vocabulary.readCardNumber()).toBe(start + i);
+    }
+
+    await vocabLocator.navButton(page, vocabLocator.NAV_BUTTON.previous).click();
+    await expect.poll(() => vocabulary.readCardNumber()).toBe(start + 2)
+    
+    
+    // 4) Back on /vocabulary: nothing changed
+    await vocabLocator.backToVocabulary(page).click();
+    await vocabulary.waitForStats(cardCount);
+    expect(await vocabulary.readAllStats(), 'stats box').toEqual(statsBefore);
+    expect(await readLocalSrsRecords(page), 'localStorage').toEqual(localBefore);
+    expect(await readFirestoreSrsRecords(page), 'Firestore').toEqual(firestoreBefore);
+  })
 
 });

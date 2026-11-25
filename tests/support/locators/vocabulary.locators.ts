@@ -75,6 +75,9 @@ export const studyMode = (page: Page, name: string) =>
 // 3) Flashcards mode
 // =============================================================================================
 
+// The "3 / 65" counter above the flashcard: which card is shown, out of how many.
+export const cardCounter = (page: Page) => page.getByText(/^\d+ \/ \d+$/);
+
 export const flashcard = (page: Page) => {
   const root = page.locator('div.cursor-pointer[style*="perspective"]');
   return {
