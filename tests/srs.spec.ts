@@ -155,8 +155,4 @@ test.describe('SRS', () => {
     expect(await readFirestoreSrsRecords(page), 'Firestore').toEqual(firestoreBefore);
   });
 
-  test.fixme('SRS-L-005 – "Trước" / "Tiếp theo" without rating changes nothing', async ({page}) => {
-
-  })
-
 });
