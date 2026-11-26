@@ -4,6 +4,7 @@ import { suppressInvitePromo } from '../support/helpers';
 import * as vocabLocator from '../support/locators/vocabulary.locators';
 import { VocabularyPage } from '../support/pages/vocabulary.page';
 import { countByStatus, readFirestoreSrsRecords, readLocalSrsRecords } from '../support/srs-data';
+import * as vocabDataTest from '../support/data/vocabulary.data';
 
 // SRS scenarios from docs/srs-scenarios.md, added one at a time.
 // Signed-in cases (SRS-L) load the session saved by tests/auth.setup.ts; with no saved session they skip.
@@ -14,15 +15,6 @@ test.use({
     await use(AUTH_FILE);
   },
 });
-
-// A whole number, optionally with thousands separators ("1.234" / "1,234").
-const COUNT = /^\d{1,3}(?:[.,]\d{3})*$/;
-// A percentage such as "80%", "80 %" or "80.5%".
-const PERCENT = /^\d+(?:[.,]\d+)?\s?%$/;
-
-const OXFORD_3000 = '3000 Từ Vựng Oxford thiết yếu';
-const TEST_UNIT = 'Unit 2';
-const VOCAB_URL = '/vocabulary';
 
 test.describe('SRS Login', () => {
   test.beforeEach(async ({ page }) => {
@@ -38,7 +30,7 @@ test.describe('SRS Login', () => {
     // Every tile shows a count, except "Độ Chính xác", which shows a percentage.
     // Soft assertions: one run reports every missing label or bad value, not just the first.
     for (const label of Object.values(vocabLocator.SRS_STAT)) {
-      const format = label === vocabLocator.SRS_STAT.accuracy ? PERCENT : COUNT;
+      const format = label === vocabLocator.SRS_STAT.accuracy ? vocabDataTest.PERCENT : vocabDataTest.COUNT;
       await expect.soft(box.label(label), `label "${label}"`).toBeVisible();
       await expect.soft(box.value(label), `value of "${label}"`).toHaveText(format);
     }
@@ -121,7 +113,7 @@ test.describe('SRS Login', () => {
     const localBefore = await readLocalSrsRecords(page);
 
     // 2) Open Unit in Flashcards mode
-    await vocabulary.openUnit(OXFORD_3000, TEST_UNIT, isMobile);
+    await vocabulary.openUnit(vocabDataTest.OXFORD_3000, vocabDataTest.TEST_UNIT, isMobile);
     await expect(page).toHaveURL(/\/vocabulary\/oxford_3000$/);
     await vocabLocator.unitActions(page).startOrContinue.click();
     await vocabLocator.studyMode(page, vocabLocator.STUDY_MODE.flashcards).click();
@@ -153,7 +145,7 @@ test.describe('SRS Login', () => {
     const localBefore = await readLocalSrsRecords(page);
 
     // 2) Open Unit in Flashcards mode
-    await vocabulary.openUnit(OXFORD_3000, TEST_UNIT, isMobile);
+    await vocabulary.openUnit(vocabDataTest.OXFORD_3000, vocabDataTest.TEST_UNIT, isMobile);
     await expect(page).toHaveURL(/\/vocabulary\/oxford_3000$/);
     await vocabLocator.unitActions(page).startOrContinue.click();
     await vocabLocator.studyMode(page, vocabLocator.STUDY_MODE.flashcards).click();
@@ -209,10 +201,10 @@ test.describe('SRS guest', () => {
 
     // 1) Fake clock: today 10:00 local time. It keeps running from there.
     await page.clock.install({ time: at(0, 10, 0) });
-    await page.goto(VOCAB_URL);
+    await page.goto(vocabDataTest.VOCAB_URL);
 
     // 2) Unit 2 (the only unit open to guests): press 3 ("3. Nhớ tốt")
-    await vocabulary.openUnit(OXFORD_3000, TEST_UNIT, isMobile);
+    await vocabulary.openUnit(vocabDataTest.OXFORD_3000, vocabDataTest.TEST_UNIT, isMobile);
     await vocabLocator.unitActions(page).startOrContinue.click();
     await vocabLocator.studyMode(page, vocabLocator.STUDY_MODE.flashcards).click();
     await vocabulary.expectCardSide('front');
@@ -237,16 +229,72 @@ test.describe('SRS guest', () => {
     await expect(due, 'today 10:00').toHaveText('0');
 
     await page.clock.setSystemTime(at(0, 23, 59));
-    await vocabLocator.collectionCard(page, OXFORD_3000).click(); // a round trip makes the box recount
+    await vocabLocator.collectionCard(page, vocabDataTest.OXFORD_3000).click(); // a round trip makes the box recount
     await vocabLocator.backToVocabulary(page).click();
     await vocabulary.waitForStats(1);
     await expect(due, 'today 23:59').toHaveText('0');
 
     // 5) Due at 00:00 tomorrow
     await page.clock.setSystemTime(at(1, 0, 0));
-    await vocabLocator.collectionCard(page, OXFORD_3000).click();
+    await vocabLocator.collectionCard(page, vocabDataTest.OXFORD_3000).click();
     await vocabLocator.backToVocabulary(page).click();
     await vocabulary.waitForStats(1);
     await expect(due, 'tomorrow 00:00').toHaveText('1');
+  });
+
+  test('SRS-B-012 – "Nhớ tốt" ladder to mastered', async ({ page, isMobile }) => {
+    const vocabulary = new VocabularyPage(page);
+    // The word id of card 1, read after the first answer (e.g. 'ac_1').
+    let wordId = '';
+
+    // 1) Fake clock: today 10:00
+    await page.clock.install({ time: at(0, 10, 0) });
+    await page.goto(vocabDataTest.VOCAB_URL);
+
+    let answerDay = at(0, 10, 0);
+    for (const [index, expected] of vocabDataTest.GOOD_LADDER.entries()) {
+      const answer = index + 1;
+
+      // 2) From the 2nd answer on: move the clock to the card's dueDate (10:00) and go back with a link,
+      //    not a reload (a reload wipes a guest's cards)
+      if (answer > 1) {
+        const { dueDate } = (await readLocalSrsRecords(page))[wordId];
+        answerDay = new Date(`${dueDate}T10:00:00`);
+        await page.clock.setSystemTime(answerDay);
+        await vocabLocator.backToVocabulary(page).click();
+      }
+
+      // 3) Rate card 1 "3. Nhớ tốt" and wait until the answer is saved
+      await vocabulary.openUnit(vocabDataTest.OXFORD_3000, vocabDataTest.TEST_UNIT, isMobile);
+      await vocabLocator.unitActions(page).startOrContinue.click();
+      await vocabLocator.studyMode(page, vocabLocator.STUDY_MODE.flashcards).click();
+      await vocabulary.expectCardSide('front');
+
+      await vocabulary.openCard(1);
+      await vocabulary.rateCard(3);
+      if (answer === 1) {
+        // A guest starts with no cards, so after the first answer the only record is the card just rated.
+        await expect.poll(async () => Object.keys(await readLocalSrsRecords(page)).length).toBe(1);
+        wordId = Object.keys(await readLocalSrsRecords(page))[0];
+      }
+      await expect.poll(async () => (await readLocalSrsRecords(page))[wordId]?.totalReviews).toBe(answer);
+
+      // 4) Check the record after this answer. Still one card: every answer rated the same card.
+      const records = await readLocalSrsRecords(page);
+      const card = records[wordId];
+      const label = `answer ${answer} on ${isoDate(answerDay)}`;
+      expect.soft(Object.keys(records), `${label}: only card ${wordId} is rated`).toEqual([wordId]);
+      const dueDay = new Date(answerDay);
+      dueDay.setDate(dueDay.getDate() + card.intervalDays);
+      expect.soft(card.stage, `${label}: box`).toBe(expected.stage);
+      expect.soft(card.intervalDays, `${label}: intervalDays`).toBeGreaterThanOrEqual(expected.minDays);
+      expect.soft(card.intervalDays, `${label}: intervalDays`).toBeLessThanOrEqual(expected.maxDays);
+      expect.soft(card.status, `${label}: status`).toBe(expected.status);
+      expect.soft(card.dueDate, `${label}: dueDate`).toBe(isoDate(dueDay));
+    }
+
+    // 5) Mastered cards remember when they became mastered
+    const mastered = (await readLocalSrsRecords(page))[wordId] as Record<string, unknown>;
+    expect(mastered.masteredAt, 'masteredAt is set once the card is mastered').toBeTruthy();
   });
 });

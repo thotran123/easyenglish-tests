@@ -10,10 +10,13 @@ This file holds the first 16 cases: the stats box, how a rating starts SRS, and 
 
 Total: **16** scenarios (Logged-in 11, Guest 5).
 
-The expected results come from the developer's document **"Easy English – Cơ chế SRS cho tester"** (Nov 15, 2026):
-<https://docs.google.com/document/d/1KfmqlSz2nzn-CjvsS4bKxNS4vi2wxQFhQQj_H_Ky2cM/edit?tab=t.0>.
-Section numbers such as §3.1 refer to that document.
-Exception: the review intervals changed after that document. Since 2026-11-26 they follow the live site (see "SRS rules used by these cases").
+The expected results come from the developer's document **"Kịch bản kiểm thử SRS"**, written for commit `6a760d1` (Nov 26, 2026):
+<https://docs.google.com/document/d/16BA7EPwM20NByDq4kwObBrEL_R9THoPJ8EkufTSfCBI/edit?tab=t.0>.
+Its case codes (A2, B7, …) are quoted where they match a case here. On 2026-11-26 the live site matched it (guest runs of A2–A5 and B7).
+
+It replaces the older document **"Easy English – Cơ chế SRS cho tester"** (Nov 15, 2026,
+<https://docs.google.com/document/d/1KfmqlSz2nzn-CjvsS4bKxNS4vi2wxQFhQQj_H_Ky2cM/edit?tab=t.0>). Section numbers such as §3.1 and §5.2 refer to that older document,
+whose intervals and "again" rule are out of date.
 
 ## Table of contents
 
@@ -76,9 +79,9 @@ The values above are the live site's: its code uses good/easy `[1, 3, 7, 14, 30]
 and guest runs with `page.clock` on 2026-11-26 gave matching results. "easy" moves a card up **two** boxes (a new card goes to H2).
 
 - **hint** keeps the box. The interval comes from the box: H1 1, H2 3, H3 7, H4 14, H5 30 days. A new card answered with a hint goes to H1, 1 day.
-- **again** on a new card puts it in H1 and makes it due **today** (`intervalDays` 0). There is no "+10 minutes".
+- **again** (a wrong answer: "1. Chưa nhớ", "Chưa thuộc", typed wrongly) keeps the box, lowers `easeFactor` by 0.1, sets `lastMissDate` = today, and the card does **not** come back the same day. A new card answered "1. Chưa nhớ" goes to H1 with `intervalDays` **1**, due **tomorrow**, `status` `learning` (dev doc A5). There is no "+10 minutes". (Changed on 2026-11-26: before, it was `intervalDays` 0, due today.)
 - **Days are calendar days in local time.** The day changes at 00:00. A card is due when `dueDate` ≤ today.
-- **Status:** `learning` while the card is in H1 after a lapse or an "again"; `reviewing` after a correct answer; `mastered` in H5.
+- **Status:** `learning` while the card has **never been answered correctly**; `reviewing` after a correct answer; `mastered` in H5.
 - **Fuzz (§5.2).** Intervals of 0, 1 and 2 days are exact. 3–6 days get ±1 day. 7–29 days get ±10% (at least ±1). 30 days or more get ±5% (at least ±2). Expected results therefore give a **range**: 3 → 2–4, 5 → 4–6, 7 → 6–8, 10 → 9–11, 14 → 13–15, 21 → 19–23, 30 → 28–32 (the ± is rounded to the nearest whole day).
 - **Ease factor** (`easeFactor`) is not checked in these cases. It gets its own group later.
 
@@ -215,8 +218,8 @@ This check is repeated at the end of every logged-in case.
 
 **Expected result:**
 
-- Stats box: "Tổng số Thẻ" +1, "Đang Học" +1, "Đến Hạn" +1 (the card is due today). **"Phiên ôn tập" unchanged**: adding a new card is not a review.
-- Card record: `stage` 1, `intervalDays` 0, `dueDate` = today, `status` `learning`, `totalReviews` 1.
+- Stats box: "Tổng số Thẻ" +1, "Đang Học" +1, "Đến Hạn" **unchanged** (the card is due tomorrow, not today). **"Phiên ôn tập" unchanged**: adding a new card is not a review.
+- Card record: `stage` 1, `intervalDays` 1, `dueDate` = tomorrow, `status` `learning`, `lastMissDate` = today, `totalReviews` 1 (dev doc A5).
 - Firestore record equals the localStorage record (see [Database check](#where-the-data-lives)).
 
 `bug confirmed by dev`: today the site adds 1 to "Phiên ôn tập" when a new card is rated (seen 2026-11-16, confirmed by dev 2026-11-17). This case fails until it is fixed.
@@ -266,7 +269,7 @@ This check is repeated at the end of every logged-in case.
 
 - "Tổng số Thẻ" does not change on the second rating.
 - `vocab_srs_records` still has **one** record for that word id, and Firestore has one record for it in its shard (no duplicate).
-- Answering again on the same day is an early review (§5.1), so `stage`, `intervalDays` and `dueDate` stay the same; only `totalReviews` goes up by 1.
+- Answering again on the same day is an early review (dev doc B7), so `stage`, `intervalDays` and `dueDate` stay the same; only `totalReviews` goes up by 1.
 
 #### SRS-L-010 – Unit overview and stats box count the same cards `verify after login` `changes account data` `check database`
 
