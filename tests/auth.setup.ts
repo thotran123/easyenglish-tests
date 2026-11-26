@@ -1,8 +1,8 @@
 import { test as setup, chromium } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { AUTH_FILE, CHROME_DEBUG_URL, connectChrome, hasSavedLogin } from './support/credentials';
-import { expectSignedIn, suppressInvitePromo } from './support/helpers';
+import { AUTH_FILE, CHROME_DEBUG_URL, connectChrome, hasSavedLogin } from '../support/credentials';
+import { expectSignedIn, suppressInvitePromo } from '../support/helpers';
 
 // Keeps the signed-in session in AUTH_FILE (playwright/.auth/user.json) up to date.
 // Signed-in tests load that file with storageState instead of signing in.

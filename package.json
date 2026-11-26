@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "lint": "oxlint --type-aware tests playwright.config.ts",
-    "format": "prettier --write tests playwright.config.ts",
-    "format:check": "prettier --check tests playwright.config.ts"
+    "lint": "oxlint --type-aware tests support playwright.config.ts",
+    "format": "prettier --write tests support playwright.config.ts",
+    "format:check": "prettier --check tests support playwright.config.ts"
   },
   "keywords": [],
   "author": "",

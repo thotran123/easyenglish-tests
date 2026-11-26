@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { AUTH_FILE, hasSavedLogin } from './support/credentials';
-import { suppressInvitePromo } from './support/helpers';
-import * as vocabLocator from './support/locators/vocabulary.locators';
-import { VocabularyPage } from './support/pages/vocabulary.page';
-import { countByStatus, readFirestoreSrsRecords, readLocalSrsRecords } from './support/srs-data';
+import { AUTH_FILE, hasSavedLogin } from '../support/credentials';
+import { suppressInvitePromo } from '../support/helpers';
+import * as vocabLocator from '../support/locators/vocabulary.locators';
+import { VocabularyPage } from '../support/pages/vocabulary.page';
+import { countByStatus, readFirestoreSrsRecords, readLocalSrsRecords } from '../support/srs-data';
 
 // SRS scenarios from docs/srs-scenarios.md, added one at a time.
 // Signed-in cases (SRS-L) load the session saved by tests/auth.setup.ts; with no saved session they skip.
@@ -22,6 +22,7 @@ const PERCENT = /^\d+(?:[.,]\d+)?\s?%$/;
 
 const OXFORD_3000 = '3000 Từ Vựng Oxford thiết yếu';
 const TEST_UNIT = 'Unit 2';
+const VOCAB_URL = '/vocabulary';
 
 test.describe('SRS Login', () => {
   test.beforeEach(async ({ page }) => {
@@ -208,7 +209,7 @@ test.describe('SRS guest', () => {
 
     // 1) Fake clock: today 10:00 local time. It keeps running from there.
     await page.clock.install({ time: at(0, 10, 0) });
-    await page.goto('/vocabulary');
+    await page.goto(VOCAB_URL);
 
     // 2) Unit 2 (the only unit open to guests): press 3 ("3. Nhớ tốt")
     await vocabulary.openUnit(OXFORD_3000, TEST_UNIT, isMobile);

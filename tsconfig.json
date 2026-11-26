@@ -12,5 +12,5 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true
   },
-  "include": ["playwright.config.ts", "tests/**/*.ts"]
+  "include": ["playwright.config.ts", "tests/**/*.ts", "support/**/*.ts"]
 }
