@@ -59,20 +59,16 @@ export class VocabularyPage {
   }
 
   // collection page
-  async openCollection(title: string) {
-    await vocabLocator.collectionCard(this.page, title).click();
-  }
-
-  async openUnit(unitTitle: string, isMobile: boolean) {
+  async openUnit(collectionTitle: string, unitTitle: string, isMobile: boolean){
+    await vocabLocator.collectionCard(this.page, collectionTitle).click();
     if (isMobile) {
       await this.page.getByRole('button', { name: 'Danh sách Unit' }).click();
     }
     await vocabLocator.unitCard(this.page, unitTitle).click();
-  }
+  };
 
   // Flashcard
   // Checks which side of the flashcard is showing: the flip layer is turned 0deg (front) or 180deg (back).
-  // expect.poll retries, because the flip takes about half a second.
   async expectCardSide(side: 'front' | 'back') {
     const expected = side === 'front' ? 'rotateY(0deg)' : 'rotateY(180deg)';
     const flipLayer = vocabLocator.flashcard(this.page).flipLayer;
@@ -80,11 +76,29 @@ export class VocabularyPage {
     const readRotation = () => flipLayer.evaluate((element) => element.style.transform);
     // Reads it again and again until it equals `expected` (fails after 5 s).
     await expect.poll(readRotation).toBe(expected);
-  }
+  };
 
   // The number of the card shown in Flashcards mode: "3 / 65" → 3.
   async readCardNumber(): Promise<number> {
     const text = await vocabLocator.cardCounter(this.page).innerText();
     return Number(text.split('/')[0].trim());
+  }
+
+  // The dots under the card only go up to 30, so cards after 30 are reached with "Tiếp theo".
+  async openCard(cardNumber: number) {
+    const LAST_DOT = 30;
+    const firstStep = Math.min(cardNumber, LAST_DOT);
+    await vocabLocator.goToCard(this.page, firstStep).click();
+    await expect.poll(() => this.readCardNumber()).toBe(firstStep);
+    for (let n = firstStep + 1; n <= cardNumber; n++) {
+      await vocabLocator.navButton(this.page, vocabLocator.NAV_BUTTON.next).click();
+      await expect.poll(() => this.readCardNumber()).toBe(n);
+    }
+  }
+
+  // Flips the card shown (Space) and rates it with key 1–4:
+  // 1 "Chưa nhớ", 2 "Khó nhớ", 3 "Nhớ tốt", 4 "Thuộc làu". The site then moves on to the next card.
+  async rateCard(rating: 1 | 2 | 3 | 4) {
+    await this.page.keyboard.press(String(rating));
   }
 }

@@ -23,7 +23,10 @@ const COUNT = /^\d{1,3}(?:[.,]\d{3})*$/;
 // A percentage such as "80%", "80 %" or "80.5%".
 const PERCENT = /^\d+(?:[.,]\d+)?\s?%$/;
 
-test.describe('SRS', () => {
+const OXFORD_3000 = '3000 Từ Vựng Oxford thiết yếu';
+const testUnit = 'Unit 2'
+
+test.describe('SRS Login', () => {
   test.beforeEach(async ({ page }) => {
     await suppressInvitePromo(page);
   });
@@ -119,9 +122,8 @@ test.describe('SRS', () => {
     const localBefore = await readLocalSrsRecords(page);
 
     // 2) Open Unit 1 in Flashcards mode
-    await vocabulary.openCollection('3000 Từ Vựng Oxford thiết yếu');
+    await vocabulary.openUnit(OXFORD_3000,testUnit, isMobile);
     await expect(page).toHaveURL(/\/vocabulary\/oxford_3000$/);
-    await vocabulary.openUnit('Unit 1', isMobile);
     await vocabLocator.unitActions(page).startOrContinue.click();
     await vocabLocator.studyMode(page, vocabLocator.STUDY_MODE.flashcards).click();
 
@@ -152,9 +154,8 @@ test.describe('SRS', () => {
     const localBefore = await readLocalSrsRecords(page);
 
     // 2) Open Unit 1 in Flashcards mode
-    await vocabulary.openCollection('3000 Từ Vựng Oxford thiết yếu');
+    await vocabulary.openUnit(OXFORD_3000,testUnit, isMobile);
     await expect(page).toHaveURL(/\/vocabulary\/oxford_3000$/);
-    await vocabulary.openUnit('Unit 1', isMobile);
     await vocabLocator.unitActions(page).startOrContinue.click();
     await vocabLocator.studyMode(page, vocabLocator.STUDY_MODE.flashcards).click();
 
@@ -168,13 +169,86 @@ test.describe('SRS', () => {
     await vocabLocator.navButton(page, vocabLocator.NAV_BUTTON.previous).click();
     await expect.poll(() => vocabulary.readCardNumber()).toBe(start + 2)
     
-    
     // 4) Back on /vocabulary: nothing changed
     await vocabLocator.backToVocabulary(page).click();
     await vocabulary.waitForStats(cardCount);
     expect(await vocabulary.readAllStats(), 'stats box').toEqual(statsBefore);
     expect(await readLocalSrsRecords(page), 'localStorage').toEqual(localBefore);
     expect(await readFirestoreSrsRecords(page), 'Firestore').toEqual(firestoreBefore);
-  })
+  });
+});
 
+
+// =============================================================================================
+// Guest cases (SRS-B): a fresh browser with no account. Guest data lives only in localStorage.
+// =============================================================================================
+
+// A local date and time `days` days from today, e.g. at(1, 0, 0) = tomorrow 00:00.
+function at(days: number, hours: number, minutes: number): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() + days, hours, minutes);
+}
+
+// "2026-11-26": the format of dueDate in the SRS records.
+function isoDate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+test.describe('SRS guest', () => {
+  // No saved session: a guest. This replaces the signed-in storageState set at the top of the file.
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test.beforeEach(async ({ page }) => {
+    await suppressInvitePromo(page);
+  });
+
+  // A guest's SRS cards are wiped on every full page load (goto / reload), so after rating
+  // this test only moves between pages with links ("Trở lại", the collection card).
+  test('SRS-B-011 – New card rated "3. Nhớ tốt" is due tomorrow at 00:00', async ({ page, isMobile }) => {
+    const vocabulary = new VocabularyPage(page);
+
+    // 1) Fake clock: today 10:00 local time. It keeps running from there.
+    await page.clock.install({ time: at(0, 10, 0) });
+    await page.goto('/vocabulary');
+
+    // 2) Unit 2 (the only unit open to guests): flip the first card and press 3 ("3. Nhớ tốt")
+    await vocabulary.openUnit(OXFORD_3000, testUnit, isMobile);
+    await vocabLocator.unitActions(page).startOrContinue.click();
+    await vocabLocator.studyMode(page, vocabLocator.STUDY_MODE.flashcards).click();
+    await vocabulary.expectCardSide('front');
+    await vocabulary.openCard(1)
+    await vocabulary.rateCard(3);
+
+    // 3) The card record: box 1 (H1), due tomorrow
+    await expect.poll(async () => Object.keys(await readLocalSrsRecords(page)).length).toBe(1);
+    const records = await readLocalSrsRecords(page);
+    const wordId = Object.keys(records)[0];
+    expect(records[wordId]).toMatchObject({
+      stage: 1,
+      intervalDays: 1,
+      dueDate: isoDate(at(1, 0, 0)),
+      status: 'reviewing',
+    });
+
+    // 4) Not due today, neither now nor at 23:59
+    const due = vocabulary.stats.value(vocabLocator.SRS_STAT.due);
+    await vocabLocator.backToVocabulary(page).click();
+    await vocabulary.waitForStats(1);
+    await expect(due, 'today 10:00').toHaveText('0');
+
+    await page.clock.setSystemTime(at(0, 23, 59));
+    await vocabLocator.collectionCard(page, OXFORD_3000).click(); // a round trip makes the box recount
+    await vocabLocator.backToVocabulary(page).click();
+    await vocabulary.waitForStats(1);
+    await expect(due, 'today 23:59').toHaveText('0');
+
+    // 5) Due at 00:00 tomorrow
+    await page.clock.setSystemTime(at(1, 0, 0));
+    await vocabLocator.collectionCard(page, OXFORD_3000).click();
+    await vocabLocator.backToVocabulary(page).click();
+    await vocabulary.waitForStats(1);
+    await expect(due, 'tomorrow 00:00').toHaveText('1');
+  });
 });

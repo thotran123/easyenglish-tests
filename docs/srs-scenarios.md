@@ -278,7 +278,7 @@ This check is repeated at the end of every logged-in case.
 **Steps**
 
 1. Fresh guest context; install the clock at today 10:00 local time
-2. Open Unit 2, flip the first card and press **3** ("3. Nhớ tốt")
+2. Open Unit 2, select a card and press **3** ("3. Nhớ tốt")
 3. Read the card record
 4. Set the clock to today 23:59 and reload; check whether the card is due
 5. Set the clock to tomorrow 00:00 and reload; check whether the card is due
