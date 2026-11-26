@@ -11,10 +11,7 @@ import { header } from './support/locators/common.locators';
 // so a session saved by this same run is picked up. With no saved session the tests skip.
 test.use({
   storageState: async ({}, use) => {
-    test.skip(
-      !hasSavedLogin(),
-      'No saved session. See "Signed-in session (Google login)" in CLAUDE.md to create one.',
-    );
+    test.skip(!hasSavedLogin(), 'No saved session. See "Signed-in session (Google login)" in CLAUDE.md to create one.');
     await use(AUTH_FILE);
   },
 });

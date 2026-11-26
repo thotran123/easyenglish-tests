@@ -10,10 +10,7 @@ import { countByStatus, readFirestoreSrsRecords, readLocalSrsRecords } from './s
 
 test.use({
   storageState: async ({}, use) => {
-    test.skip(
-      !hasSavedLogin(),
-      'No saved session. See "Signed-in session (Google login)" in CLAUDE.md to create one.',
-    );
+    test.skip(!hasSavedLogin(), 'No saved session. See "Signed-in session (Google login)" in CLAUDE.md to create one.');
     await use(AUTH_FILE);
   },
 });
@@ -24,7 +21,7 @@ const COUNT = /^\d{1,3}(?:[.,]\d{3})*$/;
 const PERCENT = /^\d+(?:[.,]\d+)?\s?%$/;
 
 const OXFORD_3000 = '3000 Từ Vựng Oxford thiết yếu';
-const testUnit = 'Unit 2'
+const TEST_UNIT = 'Unit 2';
 
 test.describe('SRS Login', () => {
   test.beforeEach(async ({ page }) => {
@@ -61,9 +58,11 @@ test.describe('SRS Login', () => {
     await vocabulary.waitForStats(firestoreCount);
 
     // Read the numbers in the stats box on UI
-    const stat = await vocabulary.readAllStats ();
+    const stat = await vocabulary.readAllStats();
     expect.soft(stat.totalBar, '"Tổng Thẻ" = "Tổng số Thẻ"').toBe(stat.totalCards);
-    expect.soft(stat.learning + stat.reviewing + stat.mastered, '"Đang Học" + "Đang Ôn tập" + "Thành thạo" = "Tổng số Thẻ"').toBe(stat.totalCards);
+    expect
+      .soft(stat.learning + stat.reviewing + stat.mastered, '"Đang Học" + "Đang Ôn tập" + "Thành thạo" = "Tổng số Thẻ"')
+      .toBe(stat.totalCards);
 
     // Read data on localStorage
     await expect
@@ -85,8 +84,7 @@ test.describe('SRS Login', () => {
     }
   });
 
-  test('SRS-L-003 – Stats are the same after reload and in a second browser',
-  async ({ page, browser, baseURL }) => {
+  test('SRS-L-003 – Stats are the same after reload and in a second browser', async ({ page, browser, baseURL }) => {
     // Mở trang và đọc stats ban đầu
     const vocabulary = new VocabularyPage(page);
     await vocabulary.gotoSignedIn();
@@ -110,7 +108,7 @@ test.describe('SRS Login', () => {
     await context2.close();
   });
 
-  test('SRS-L-004 – Flipping a card without rating changes nothing', async ({page, isMobile}) => {
+  test('SRS-L-004 – Flipping a card without rating changes nothing', async ({ page, isMobile }) => {
     const vocabulary = new VocabularyPage(page);
     await vocabulary.gotoSignedIn();
 
@@ -121,8 +119,8 @@ test.describe('SRS Login', () => {
     const statsBefore = await vocabulary.readAllStats();
     const localBefore = await readLocalSrsRecords(page);
 
-    // 2) Open Unit 1 in Flashcards mode
-    await vocabulary.openUnit(OXFORD_3000,testUnit, isMobile);
+    // 2) Open Unit in Flashcards mode
+    await vocabulary.openUnit(OXFORD_3000, TEST_UNIT, isMobile);
     await expect(page).toHaveURL(/\/vocabulary\/oxford_3000$/);
     await vocabLocator.unitActions(page).startOrContinue.click();
     await vocabLocator.studyMode(page, vocabLocator.STUDY_MODE.flashcards).click();
@@ -133,7 +131,7 @@ test.describe('SRS Login', () => {
     await vocabulary.expectCardSide('back');
     await page.keyboard.press('Space'); // flip back with the Space key
     await vocabulary.expectCardSide('front');
-    
+
     // 4) Back on /vocabulary: nothing changed
     await vocabLocator.backToVocabulary(page).click();
     await vocabulary.waitForStats(cardCount);
@@ -142,7 +140,7 @@ test.describe('SRS Login', () => {
     expect(await readFirestoreSrsRecords(page), 'Firestore').toEqual(firestoreBefore);
   });
 
-  test('SRS-L-005 – "Trước" / "Tiếp theo" without rating changes nothing', async ({page,isMobile}) => {
+  test('SRS-L-005 – "Trước" / "Tiếp theo" without rating changes nothing', async ({ page, isMobile }) => {
     const vocabulary = new VocabularyPage(page);
     await vocabulary.gotoSignedIn();
 
@@ -153,13 +151,13 @@ test.describe('SRS Login', () => {
     const statsBefore = await vocabulary.readAllStats();
     const localBefore = await readLocalSrsRecords(page);
 
-    // 2) Open Unit 1 in Flashcards mode
-    await vocabulary.openUnit(OXFORD_3000,testUnit, isMobile);
+    // 2) Open Unit in Flashcards mode
+    await vocabulary.openUnit(OXFORD_3000, TEST_UNIT, isMobile);
     await expect(page).toHaveURL(/\/vocabulary\/oxford_3000$/);
     await vocabLocator.unitActions(page).startOrContinue.click();
     await vocabLocator.studyMode(page, vocabLocator.STUDY_MODE.flashcards).click();
 
-    // 3) 
+    // 3)
     const start = await vocabulary.readCardNumber();
     for (let i = 1; i <= 3; i++) {
       await vocabLocator.navButton(page, vocabLocator.NAV_BUTTON.next).click();
@@ -167,8 +165,8 @@ test.describe('SRS Login', () => {
     }
 
     await vocabLocator.navButton(page, vocabLocator.NAV_BUTTON.previous).click();
-    await expect.poll(() => vocabulary.readCardNumber()).toBe(start + 2)
-    
+    await expect.poll(() => vocabulary.readCardNumber()).toBe(start + 2);
+
     // 4) Back on /vocabulary: nothing changed
     await vocabLocator.backToVocabulary(page).click();
     await vocabulary.waitForStats(cardCount);
@@ -177,7 +175,6 @@ test.describe('SRS Login', () => {
     expect(await readFirestoreSrsRecords(page), 'Firestore').toEqual(firestoreBefore);
   });
 });
-
 
 // =============================================================================================
 // Guest cases (SRS-B): a fresh browser with no account. Guest data lives only in localStorage.
@@ -213,12 +210,12 @@ test.describe('SRS guest', () => {
     await page.clock.install({ time: at(0, 10, 0) });
     await page.goto('/vocabulary');
 
-    // 2) Unit 2 (the only unit open to guests): flip the first card and press 3 ("3. Nhớ tốt")
-    await vocabulary.openUnit(OXFORD_3000, testUnit, isMobile);
+    // 2) Unit 2 (the only unit open to guests): press 3 ("3. Nhớ tốt")
+    await vocabulary.openUnit(OXFORD_3000, TEST_UNIT, isMobile);
     await vocabLocator.unitActions(page).startOrContinue.click();
     await vocabLocator.studyMode(page, vocabLocator.STUDY_MODE.flashcards).click();
     await vocabulary.expectCardSide('front');
-    await vocabulary.openCard(1)
+    await vocabulary.openCard(1);
     await vocabulary.rateCard(3);
 
     // 3) The card record: box 1 (H1), due tomorrow
