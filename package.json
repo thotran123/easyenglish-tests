@@ -3,13 +3,20 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "lint": "oxlint --type-aware tests playwright.config.ts",
+    "format": "prettier --write tests playwright.config.ts",
+    "format:check": "prettier --check tests playwright.config.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.6",
+    "oxlint": "^1.95.0",
+    "oxlint-tsgolint": "^7.0.2008",
+    "prettier": "^3.10.1",
     "typescript": "^7.0.2"
   }
 }
