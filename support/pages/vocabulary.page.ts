@@ -24,11 +24,9 @@ export class VocabularyPage {
   // (only use that form for an account that has at least 1 card).
   async waitForStats(expectedTotal?: number) {
     const total = this.stats.value(vocabLocator.SRS_STAT.totalCards);
-    if (expectedTotal === undefined)
-      await expect(total).not.toHaveText('0');
-    else
-      await expect(total).toHaveText(String(expectedTotal));
-    }
+    if (expectedTotal === undefined) await expect(total).not.toHaveText('0');
+    else await expect(total).toHaveText(String(expectedTotal));
+  }
 
   // The number in one tile, e.g. readStat(SRS_STAT.learning). Thousands separators are removed: "1.234" → 1234.
   // Not for "Độ Chính xác", which is a percentage.
@@ -43,7 +41,7 @@ export class VocabularyPage {
     return Number(text.replace('%', '').replace(',', '.').trim());
   }
 
-    // Reads every number in the stats box into an object { name: value }, e.g.
+  // Reads every number in the stats box into an object { name: value }, e.g.
   // { totalCards: 2, due: 2, sessions: 0, accuracy: 60, learning: 1, reviewing: 1, mastered: 0, totalBar: 2 }.
   // "Độ Chính xác" is a percentage, so it is read with readAccuracy instead of readStat.
   async readAllStats(): Promise<Record<string, number>> {
@@ -59,13 +57,13 @@ export class VocabularyPage {
   }
 
   // collection page
-  async openUnit(collectionTitle: string, unitTitle: string, isMobile: boolean){
+  async openUnit(collectionTitle: string, unitTitle: string, isMobile: boolean) {
     await vocabLocator.collectionCard(this.page, collectionTitle).click();
     if (isMobile) {
       await this.page.getByRole('button', { name: 'Danh sách Unit' }).click();
     }
     await vocabLocator.unitCard(this.page, unitTitle).click();
-  };
+  }
 
   // Flashcard
   // Checks which side of the flashcard is showing: the flip layer is turned 0deg (front) or 180deg (back).
@@ -76,7 +74,7 @@ export class VocabularyPage {
     const readRotation = () => flipLayer.evaluate((element) => element.style.transform);
     // Reads it again and again until it equals `expected` (fails after 5 s).
     await expect.poll(readRotation).toBe(expected);
-  };
+  }
 
   // The number of the card shown in Flashcards mode: "3 / 65" → 3.
   async readCardNumber(): Promise<number> {
@@ -96,7 +94,6 @@ export class VocabularyPage {
     }
   }
 
-  // Flips the card shown (Space) and rates it with key 1–4:
   // 1 "Chưa nhớ", 2 "Khó nhớ", 3 "Nhớ tốt", 4 "Thuộc làu". The site then moves on to the next card.
   async rateCard(rating: 1 | 2 | 3 | 4) {
     await this.page.keyboard.press(String(rating));

@@ -38,22 +38,20 @@ export const srsStatsBox = (page: Page) => {
 
 // A vocabulary collection card on /vocabulary, found by its title (e.g. '3000 Từ Vựng Oxford thiết yếu').
 export const collectionCard = (page: Page, title: string) =>
-  page.getByRole('button').filter({ has: page.getByRole('heading', { level: 3, name: title }) })
+  page.getByRole('button').filter({ has: page.getByRole('heading', { level: 3, name: title }) });
 
 // =============================================================================================
 // 2) Collection page (e.g. /vocabulary/oxford_3000): units and study modes
 // =============================================================================================
-export const backToVocabulary = (page:Page) => page.getByRole('link', {name: 'Trở lại', exact: true})
+export const backToVocabulary = (page: Page) => page.getByRole('link', { name: 'Trở lại', exact: true });
 
 export const unitCard = (page: Page, unitTitle: string) =>
-  page.getByRole('button').filter({has: page.getByText(unitTitle, {exact:true})})
+  page.getByRole('button').filter({ has: page.getByText(unitTitle, { exact: true }) });
 
 // The three buttons in the unit panel after a unit is selected.
 export const unitActions = (page: Page) => ({
   viewWords: page.getByRole('button', { name: 'Xem từ vựng' }),
-  startOrContinue: page
-    .getByRole('button', { name: 'Học tiếp' })
-    .or(page.getByRole('button', { name: 'Bắt đầu học' })),
+  startOrContinue: page.getByRole('button', { name: 'Học tiếp' }).or(page.getByRole('button', { name: 'Bắt đầu học' })),
   restart: page.getByRole('button', { name: 'Học lại từ đầu' }),
 });
 

@@ -10,9 +10,13 @@ This file holds the first 16 cases: the stats box, how a rating starts SRS, and 
 
 Total: **16** scenarios (Logged-in 11, Guest 5).
 
-The expected results come from the developer's document **"Easy English – Cơ chế SRS cho tester"** (Nov 15, 2026):
-<https://docs.google.com/document/d/1KfmqlSz2nzn-CjvsS4bKxNS4vi2wxQFhQQj_H_Ky2cM/edit?tab=t.0>.
-Section numbers such as §3.1 refer to that document.
+The expected results come from the developer's document **"Kịch bản kiểm thử SRS"**, written for commit `6a760d1` (Nov 26, 2026):
+<https://docs.google.com/document/d/16BA7EPwM20NByDq4kwObBrEL_R9THoPJ8EkufTSfCBI/edit?tab=t.0>.
+Its case codes (A2, B7, …) are quoted where they match a case here. On 2026-11-26 the live site matched it (guest runs of A2–A5 and B7).
+
+It replaces the older document **"Easy English – Cơ chế SRS cho tester"** (Nov 15, 2026,
+<https://docs.google.com/document/d/1KfmqlSz2nzn-CjvsS4bKxNS4vi2wxQFhQQj_H_Ky2cM/edit?tab=t.0>). Section numbers such as §3.1 and §5.2 refer to that older document,
+whose intervals and "again" rule are out of date.
 
 ## Table of contents
 
@@ -39,7 +43,7 @@ Section numbers such as §3.1 refer to that document.
 **[C. New and learning cards (6)](#c-new-and-learning-cards)**
 
 - [SRS-B-011](#srs-b-011--new-card-rated-3-nhớ-tốt-is-due-tomorrow-at-0000-mock-clock-pageclock) – New card rated "3. Nhớ tốt" is due tomorrow at 00:00 `mock clock (page.clock)`
-- [SRS-B-012](#srs-b-012--nhớ-tốt-ladder-to-mastered-mock-clock-pageclock-fuzz-range-to-confirm-with-dev) – "Nhớ tốt" ladder to mastered `mock clock (page.clock)` `fuzz range` `to confirm with dev`
+- [SRS-B-012](#srs-b-012--nhớ-tốt-ladder-to-mastered-mock-clock-pageclock-fuzz-range) – "Nhớ tốt" ladder to mastered `mock clock (page.clock)` `fuzz range`
 - [SRS-B-013](#srs-b-013--khó-nhớ-ladder-to-mastered-mock-clock-pageclock-fuzz-range) – "Khó nhớ" ladder to mastered `mock clock (page.clock)` `fuzz range`
 - [SRS-B-014](#srs-b-014--thuộc-làu-ladder-to-mastered-mock-clock-pageclock-fuzz-range) – "Thuộc làu" ladder to mastered `mock clock (page.clock)` `fuzz range`
 - [SRS-B-015](#srs-b-015--a-hint-answer-keeps-the-box-fuzz-range-to-confirm) – A hint answer keeps the box `fuzz range` `to confirm`
@@ -62,19 +66,23 @@ Section numbers such as §3.1 refer to that document.
 | hint | – | typed correctly after a hint |
 | wrong | – | typed wrongly |
 
-**Correct answers on a card that is not mastered yet (§3.1).** Days until the next review:
+**Correct answers on a card that is not mastered yet.** Days until the next review (before fuzz):
 
 | Grade | 1st answer | 2nd | 3rd | 4th | 5th |
 |---|---|---|---|---|---|
-| good | 1 (H1) | 2 (H2) | 4 (H3) | 7 (H4) | 15 (H5, mastered) |
-| hard | 1 (H1) | 2 (H2) | 3 (H3) | 5 (H4) | 10 (H5, mastered) |
-| easy | 2 (H2) | 4 (H3) | 7 (H4) | 15 (H5, mastered) | – |
+| good | 1 (H1) | 3 (H2) | 7 (H3) | 14 (H4) | 30 (H5, mastered) |
+| hard | 1 (H1) | 2 (H2) | 5 (H3) | 10 (H4) | 21 (H5, mastered) |
+| easy | 3 (H2) | 14 (H4) | 30 (H5, mastered) | – | – |
 
-- **hint** keeps the box. The interval comes from the box: H1 1, H2 2, H3 4, H4 7, H5 15 days. A new card answered with a hint goes to H1, 1 day.
-- **again** on a new card puts it in H1 and makes it due **today** (`intervalDays` 0). There is no "+10 minutes".
+Updated 2026-11-26: the developer changed these intervals after the Nov 15 document (which had good 1/2/4/7/15, hard 1/2/3/5/10, easy 2/4/7/15).
+The values above are the live site's: its code uses good/easy `[1, 3, 7, 14, 30]` and hard `[1, 2, 5, 10, 21]` days for boxes H1–H5,
+and guest runs with `page.clock` on 2026-11-26 gave matching results. "easy" moves a card up **two** boxes (a new card goes to H2).
+
+- **hint** keeps the box. The interval comes from the box: H1 1, H2 3, H3 7, H4 14, H5 30 days. A new card answered with a hint goes to H1, 1 day.
+- **again** (a wrong answer: "1. Chưa nhớ", "Chưa thuộc", typed wrongly) keeps the box, lowers `easeFactor` by 0.1, sets `lastMissDate` = today, and the card does **not** come back the same day. A new card answered "1. Chưa nhớ" goes to H1 with `intervalDays` **1**, due **tomorrow**, `status` `learning` (dev doc A5). There is no "+10 minutes". (Changed on 2026-11-26: before, it was `intervalDays` 0, due today.)
 - **Days are calendar days in local time.** The day changes at 00:00. A card is due when `dueDate` ≤ today.
-- **Status:** `learning` while the card is in H1 after a lapse or an "again"; `reviewing` after a correct answer; `mastered` in H5.
-- **Fuzz (§5.2).** Intervals of 0, 1 and 2 days are exact. 3–6 days get ±1 day. 7–29 days get ±10% (at least ±1). 30 days or more get ±5% (at least ±2). Expected results therefore give a **range**, for example 7 → 6–8 and 15 → 13–17.
+- **Status:** `learning` while the card has **never been answered correctly**; `reviewing` after a correct answer; `mastered` in H5.
+- **Fuzz (§5.2).** Intervals of 0, 1 and 2 days are exact. 3–6 days get ±1 day. 7–29 days get ±10% (at least ±1). 30 days or more get ±5% (at least ±2). Expected results therefore give a **range**: 3 → 2–4, 5 → 4–6, 7 → 6–8, 10 → 9–11, 14 → 13–15, 21 → 19–23, 30 → 28–32 (the ± is rounded to the nearest whole day).
 - **Ease factor** (`easeFactor`) is not checked in these cases. It gets its own group later.
 
 ## Where the data lives
@@ -117,6 +125,9 @@ Verified on 2026-11-17: the test account rated `ss_1` "3. Nhớ tốt", and Fire
 - Fresh browser context with empty localStorage. Set `easy_english_invite_promo_seen_v1` first so the invite promo dialog does not block clicks (helper `suppressInvitePromo`).
 - Guests can only study **Unit 2 · Hành động** (topic `actions`, word ids `ac_1`, `ac_2`, …). Other units are locked.
 - To move to another day, use `page.clock` (the dates are computed in the browser). A case may also seed a record in the format above with `page.addInitScript` before the page loads.
+- **A guest's cards are wiped on every full page load** (`page.goto`, `page.reload`, typing a URL). After the first rating, move between pages only with links: "Trở lại" back to `/vocabulary`, or a collection card. (Checked 2026-11-25.)
+- After `page.clock.setSystemTime`, the stats box recounts only when `/vocabulary` is shown again: open a collection and go back with "Trở lại".
+- To answer the same card again on a later day: move the clock, click "Trở lại", open Unit 2, "HỌC TIẾP", Flashcards, then go to the card with its dot ("Chuyển đến thẻ N"). In Unit 2, card N is word id `ac_N`.
 
 **How to rate a card**
 
@@ -207,8 +218,8 @@ This check is repeated at the end of every logged-in case.
 
 **Expected result:**
 
-- Stats box: "Tổng số Thẻ" +1, "Đang Học" +1, "Đến Hạn" +1 (the card is due today). **"Phiên ôn tập" unchanged**: adding a new card is not a review.
-- Card record: `stage` 1, `intervalDays` 0, `dueDate` = today, `status` `learning`, `totalReviews` 1.
+- Stats box: "Tổng số Thẻ" +1, "Đang Học" +1, "Đến Hạn" **unchanged** (the card is due tomorrow, not today). **"Phiên ôn tập" unchanged**: adding a new card is not a review.
+- Card record: `stage` 1, `intervalDays` 1, `dueDate` = tomorrow, `status` `learning`, `lastMissDate` = today, `totalReviews` 1 (dev doc A5).
 - Firestore record equals the localStorage record (see [Database check](#where-the-data-lives)).
 
 `bug confirmed by dev`: today the site adds 1 to "Phiên ôn tập" when a new card is rated (seen 2026-11-16, confirmed by dev 2026-11-17). This case fails until it is fixed.
@@ -228,7 +239,7 @@ This check is repeated at the end of every logged-in case.
 - Stats box: "Tổng số Thẻ" +3, "Đang Ôn tập" +3, "Đến Hạn" **unchanged** (no card is due today), **"Phiên ôn tập" unchanged**.
 - Card rated 2: `stage` 1, `intervalDays` 1, `dueDate` = tomorrow, `status` `reviewing`.
 - Card rated 3: `stage` 1, `intervalDays` 1, `dueDate` = tomorrow, `status` `reviewing`.
-- Card rated 4: `stage` 2, `intervalDays` 2, `dueDate` = the day after tomorrow, `status` `reviewing`.
+- Card rated 4: `stage` 2, `intervalDays` 2–4 (3 ± 1), `dueDate` = today + `intervalDays`, `status` `reviewing`.
 - Each Firestore record equals its localStorage record.
 
 `bug confirmed by dev`: same "Phiên ôn tập" bug as SRS-L-006.
@@ -258,7 +269,7 @@ This check is repeated at the end of every logged-in case.
 
 - "Tổng số Thẻ" does not change on the second rating.
 - `vocab_srs_records` still has **one** record for that word id, and Firestore has one record for it in its shard (no duplicate).
-- Answering again on the same day is an early review (§5.1), so `stage`, `intervalDays` and `dueDate` stay the same; only `totalReviews` goes up by 1.
+- Answering again on the same day is an early review (dev doc B7), so `stage`, `intervalDays` and `dueDate` stay the same; only `totalReviews` goes up by 1.
 
 #### SRS-L-010 – Unit overview and stats box count the same cards `verify after login` `changes account data` `check database`
 
@@ -280,23 +291,23 @@ This check is repeated at the end of every logged-in case.
 1. Fresh guest context; install the clock at today 10:00 local time
 2. Open Unit 2, select a card and press **3** ("3. Nhớ tốt")
 3. Read the card record
-4. Set the clock to today 23:59 and reload; check whether the card is due
-5. Set the clock to tomorrow 00:00 and reload; check whether the card is due
+4. Go back to `/vocabulary` with "Trở lại" and read "Đến Hạn". Set the clock to today 23:59, open the collection and go back with "Trở lại" (no reload: it would wipe the guest's card), and read "Đến Hạn" again
+5. Set the clock to tomorrow 00:00, open the collection and go back with "Trở lại", and read "Đến Hạn"
 
 **Expected result:**
 
 - The card goes **into box 1 (H1)**: `stage` 1, `intervalDays` 1, `dueDate` = tomorrow, `status` `reviewing`. ("H1" is the box the card lands in, not button 1.)
-- At 23:59 today the card is **not** due. At 00:00 tomorrow it **is** due ("Đến Hạn" / review list).
+- At 10:00 and at 23:59 today the card is **not** due ("Đến Hạn" = 0). At 00:00 tomorrow it **is** due ("Đến Hạn" = 1).
 
 The same check was run signed in on 2026-11-17 (card `ss_1`): localStorage and Firestore both had `stage` 1, `intervalDays` 1, `dueDate` = tomorrow.
 
-#### SRS-B-012 – "Nhớ tốt" ladder to mastered `mock clock (page.clock)` `fuzz range` `to confirm with dev`
+#### SRS-B-012 – "Nhớ tốt" ladder to mastered `mock clock (page.clock)` `fuzz range`
 
 **Steps**
 
-1. Fresh guest context; install the clock
+1. Fresh guest context; install the clock at today 10:00
 2. Rate a new card **3** ("3. Nhớ tốt")
-3. Move the clock to the card's `dueDate`, reload, and rate it **3** again
+3. Move the clock to the card's `dueDate` (10:00), go back to the same card without reloading (see "Guest cases" above), and rate it **3** again
 4. Repeat step 3 until the card has been answered 5 times
 5. Read the record after each answer
 
@@ -305,20 +316,20 @@ The same check was run signed in on 2026-11-17 (card `ss_1`): localStorage and F
 | Answer | Box | `intervalDays` | Status |
 |---|---|---|---|
 | 1st | H1 | 1 | reviewing |
-| 2nd | H2 | 2 | reviewing |
-| 3rd | H3 | 3–5 (4 ± 1) | reviewing |
-| 4th | H4 | 6–8 (7 ± 10%) | reviewing |
-| 5th | H5 | 13–17 (15 ± 10%) | **mastered**, `masteredAt` set |
+| 2nd | H2 | 2–4 (3 ± 1) | reviewing |
+| 3rd | H3 | 6–8 (7 ± 1) | reviewing |
+| 4th | H4 | 13–15 (14 ± 1) | reviewing |
+| 5th | H5 | 28–32 (30 ± 2) | **mastered**, `masteredAt` set |
 
-`to confirm with dev` (Q3): the dev doc's example in §10 writes 4 and 7 without ranges.
+After each answer, `dueDate` = the day of the answer + `intervalDays`.
 
 #### SRS-B-013 – "Khó nhớ" ladder to mastered `mock clock (page.clock)` `fuzz range`
 
 **Steps**
 
-1. Fresh guest context; install the clock
+1. Fresh guest context; install the clock at today 10:00
 2. Rate a new card **2** ("2. Khó nhớ")
-3. Move the clock to the card's `dueDate`, reload, and rate it **2** again
+3. Move the clock to the card's `dueDate` (10:00), go back to the same card without reloading, and rate it **2** again
 4. Repeat step 3 until the card has been answered 5 times
 5. Read the record after each answer
 
@@ -328,36 +339,37 @@ The same check was run signed in on 2026-11-17 (card `ss_1`): localStorage and F
 |---|---|---|---|
 | 1st | H1 | 1 | reviewing |
 | 2nd | H2 | 2 | reviewing |
-| 3rd | H3 | 2–4 (3 ± 1) | reviewing |
-| 4th | H4 | 4–6 (5 ± 1) | reviewing |
-| 5th | H5 | 9–11 (10 ± 10%) | **mastered** |
+| 3rd | H3 | 4–6 (5 ± 1) | reviewing |
+| 4th | H4 | 9–11 (10 ± 1) | reviewing |
+| 5th | H5 | 19–23 (21 ± 2) | **mastered**, `masteredAt` set |
 
-Note: "Khó nhớ" reaches H5 (mastered) at 10 days, not 15.
+Note: "Khó nhớ" reaches H5 (mastered) at 21 days, not 30.
 
 #### SRS-B-014 – "Thuộc làu" ladder to mastered `mock clock (page.clock)` `fuzz range`
 
 **Steps**
 
-1. Fresh guest context; install the clock
+1. Fresh guest context; install the clock at today 10:00
 2. Rate a new card **4** ("4. Thuộc làu")
-3. Move the clock to the card's `dueDate`, reload, and rate it **4** again
-4. Repeat step 3 until the card has been answered 4 times
+3. Move the clock to the card's `dueDate` (10:00), go back to the same card without reloading, and rate it **4** again
+4. Repeat step 3 until the card has been answered 3 times
 5. Read the record after each answer
 
 **Expected result:**
 
 | Answer | Box | `intervalDays` | Status |
 |---|---|---|---|
-| 1st | H2 | 2 | reviewing |
-| 2nd | H3 | 3–5 (4 ± 1) | reviewing |
-| 3rd | H4 | 6–8 (7 ± 10%) | reviewing |
-| 4th | H5 | 13–17 (15 ± 10%) | **mastered** |
+| 1st | H2 | 2–4 (3 ± 1) | reviewing |
+| 2nd | H4 | 13–15 (14 ± 1) | reviewing |
+| 3rd | H5 | 28–32 (30 ± 2) | **mastered**, `masteredAt` set |
+
+Note: "Thuộc làu" moves the card up two boxes each time (H2 → H4 → H5), so it is mastered after 3 answers.
 
 #### SRS-B-015 – A hint answer keeps the box `fuzz range` `to confirm`
 
 **Steps**
 
-1. Fresh guest context. Seed a card in H3 that is due today (`stage` 3, `intervalDays` 4, `dueDate` = today, `status` `reviewing`)
+1. Fresh guest context. Seed a card in H3 that is due today (`stage` 3, `intervalDays` 7, `dueDate` = today, `status` `reviewing`)
 2. Open the vocabulary review (typing mode) `/vocabulary/review`
 3. Use a hint (Tab), then type the correct answer
 4. Read the record
@@ -365,7 +377,7 @@ Note: "Khó nhớ" reaches H5 (mastered) at 10 days, not 15.
 
 **Expected result:**
 
-- Seeded H3 card: stays **H3**, `intervalDays` 3–5 (4 ± 1), `status` `reviewing`.
+- Seeded H3 card: stays **H3**, `intervalDays` 6–8 (7 ± 1), `status` `reviewing`.
 - New card answered with a hint: **H1**, `intervalDays` 1, due tomorrow.
 
 `to confirm`: guest access to `/vocabulary/review` and to the topic SRS button has not been checked yet. If guests are locked out, run this case signed in, with the new-card part only (no seeding) and a database check.
@@ -382,12 +394,12 @@ Note: "Khó nhớ" reaches H5 (mastered) at 10 days, not 15.
 **Expected result:**
 
 - All 5 cards rated 3: `intervalDays` exactly **1**, `dueDate` = tomorrow.
-- All 5 cards rated 4: `intervalDays` exactly **2**, `dueDate` = the day after tomorrow.
-- No card is off by a day (intervals of 0–2 days are not fuzzed, §5.2). Firestore matches localStorage for all 10 cards.
+- All 5 cards rated 4: H2, `intervalDays` **2–4** (3 ± 1). This part shows the fuzz: across 5 cards the values may differ.
+- The cards rated 3 are never off by a day (intervals of 0–2 days are not fuzzed, §5.2). Firestore matches localStorage for all 10 cards.
 
 ---
 
 ## Questions for dev
 
 - **Q1. Should the first rating of a new card count as "Phiên ôn tập"?** Answered 2026-11-17: **no, it is a bug**. SRS-L-006 and SRS-L-007 expect "Phiên ôn tập" unchanged.
-- **Q3. Fuzz on 4 and 7 days, and rounding of ±10%.** §5.2 gives 4 → 3–5 and 7 → 6–8, but the §10 example writes 1 → 2 → 4 → 7 → 13–17 without ranges. 10% of 15 is 1.5, and the doc shows 13–17 (±2), so the rounding rule is unclear. SRS-B-012 to SRS-B-014 use the §5.2 ranges until dev answers.
+- **Q3. Fuzz on 4 and 7 days, and rounding of ±10%.** Closed 2026-11-26: the developer changed the intervals (now 1/3/7/14/30 and 1/2/5/10/21, see "SRS rules"). The site's code rounds the ± to the nearest whole day (10% of 14 = 1.4 → ±1; 5% of 30 = 1.5, at least ±2 → ±2), and every interval of 3 days or more is fuzzed. SRS-B-012 to SRS-B-014 use these ranges.

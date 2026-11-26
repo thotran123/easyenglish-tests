@@ -88,25 +88,27 @@ export async function readFirestoreSrsRecords(page: Page): Promise<SrsRecords> {
     // A request sent from the test process (page.request) once hung until the whole test timed out.
     // Give up after 10 seconds, so a network problem fails fast with a clear message.
     // The second argument of page.evaluate passes url and token from the test into the browser.
-    const body = await page.evaluate(
-      async ({ url, token }) => {
-        const response = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: AbortSignal.timeout(10_000),
-        });
-        // A shard that has no card yet does not exist.
-        if (response.status === 404) {
-          return null;
-        }
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        return response.json();
-      },
-      { url, token: user.token },
-    ).catch((error) => {
-      throw new Error(`Reading Firestore vocab_${shard} failed: ${error.message}`);
-    });
+    const body = await page
+      .evaluate(
+        async ({ url, token }) => {
+          const response = await fetch(url, {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: AbortSignal.timeout(10_000),
+          });
+          // A shard that has no card yet does not exist.
+          if (response.status === 404) {
+            return null;
+          }
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          return response.json();
+        },
+        { url, token: user.token },
+      )
+      .catch((error) => {
+        throw new Error(`Reading Firestore vocab_${shard} failed: ${error.message}`);
+      });
 
     if (body === null) {
       continue;

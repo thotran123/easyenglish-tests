@@ -1,8 +1,8 @@
 import { test as setup, chromium } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { AUTH_FILE, CHROME_DEBUG_URL, connectChrome, hasSavedLogin } from './support/credentials';
-import { expectSignedIn, suppressInvitePromo } from './support/helpers';
+import { AUTH_FILE, CHROME_DEBUG_URL, connectChrome, hasSavedLogin } from '../support/credentials';
+import { expectSignedIn, suppressInvitePromo } from '../support/helpers';
 
 // Keeps the signed-in session in AUTH_FILE (playwright/.auth/user.json) up to date.
 // Signed-in tests load that file with storageState instead of signing in.
@@ -34,7 +34,10 @@ setup('refresh the saved Google session', async ({ browser, baseURL }) => {
     const page = await context.newPage();
     await suppressInvitePromo(page);
     await page.goto('/');
-    const stillSignedIn = await expectSignedIn(page).then(() => true, () => false);
+    const stillSignedIn = await expectSignedIn(page).then(
+      () => true,
+      () => false,
+    );
     setup.skip(!stillSignedIn, `The saved session has expired. ${RENEW_HINT}`);
 
     await context.storageState({ path: AUTH_FILE, indexedDB: true }); // keep the tokens fresh
@@ -49,7 +52,8 @@ setup('refresh the saved Google session', async ({ browser, baseURL }) => {
 async function saveSessionFromRealChrome(baseURL: string) {
   const chrome = await chromium.connectOverCDP(CHROME_DEBUG_URL).catch((error) => {
     throw new Error(
-      `Could not reach Chrome at ${CHROME_DEBUG_URL}. Start it first (see the comment at the top of this file).\n` + error,
+      `Could not reach Chrome at ${CHROME_DEBUG_URL}. Start it first (see the comment at the top of this file).\n` +
+        error,
     );
   });
   const context = chrome.contexts()[0];

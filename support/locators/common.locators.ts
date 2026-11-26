@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 
 // Locators for parts that appear on every page (header, sidebar, site-wide popups).
-// Page-specific locators live in tests/support/locators/<page>.locators.ts, so a UI change only needs one edit.
+// Page-specific locators live in support/locators/<page>.locators.ts, so a UI change only needs one edit.
 // Each group is a function of `page` because Playwright locators belong to a page.
 
 // The "Mời bạn bè" (invite friends) promo dialog the site opens a few seconds after load.
